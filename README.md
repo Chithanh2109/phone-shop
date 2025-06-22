@@ -68,6 +68,8 @@
 - **MySQL**  
   File `ban_dien_thoai.sql` cho thấy website sử dụng MySQL để lưu trữ dữ liệu (sản phẩm, đơn hàng, người dùng, đánh giá, v.v.).  
   Kết nối tới MySQL được cấu hình trong `config/database.php`.
+  - **server**  
+  chạy bằng ứng dụng xampp
 ## 3. Frontend
 - **HTML/CSS/JavaScript**  
   - Giao diện được xây dựng bằng HTML kết hợp với CSS (các file trong `assets/css/`, `admin/css/`, `css/`).
