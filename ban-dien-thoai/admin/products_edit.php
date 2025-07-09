@@ -230,54 +230,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $product) { // Đảm bảo có s�
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - <?php echo getSetting('site_name'); ?></title>
     <link rel="icon" href="<?php echo getSetting('site_favicon'); ?>" type="image/x-icon">
-    <link rel="stylesheet" href="../css/style.css"> <!-- Tạm dùng CSS chung -->
+    <link rel="stylesheet" href="../assets/css/style.css"> <!-- Tạm dùng CSS chung -->
     <link rel="stylesheet" href="css/admin.css"> <!-- CSS riêng cho admin -->
-    <!-- Có thể cần thêm link tới thư viện icon ở đây -->
-    <style>
-        .product-images-preview {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 10px 0;
-        }
-        .product-image-item {
-            position: relative;
-            width: 120px;
-            height: 120px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .product-image-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .product-image-item input[type="checkbox"] {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            z-index: 1;
-        }
-        .product-image-item label {
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-    </style>
 </head>
 <body>
     <div class="admin-wrapper">
         <!-- Admin Sidebar -->
         <aside class="admin-sidebar">
+            <h2>Quản trị</h2>
             <nav>
                 <ul>
-                    <li><a href="../index.php" class="sidebar-link">Trang chủ</a></li>
                     <li><a href="index.php" class="sidebar-link <?php echo ($current_page == 'index.php') ? 'active' : ''; ?>">Bảng điều khiển</a></li>
                     <li><a href="products.php" class="sidebar-link <?php echo ($current_page == 'products.php') ? 'active' : ''; ?>">Quản lý Sản phẩm</a></li>
                     <li><a href="orders.php" class="sidebar-link <?php echo ($current_page == 'orders.php') ? 'active' : ''; ?>">Quản lý Đơn hàng</a></li>
@@ -292,16 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $product) { // Đảm bảo có s�
 
         <!-- Admin Main Content -->
         <div class="admin-main-content">
-            <!-- Admin Header Top -->
-            <header class="admin-header-top">
-                <div>
-                    <h3><?php echo $page_title; ?></h3>
-                </div>
-                <div class="user-menu">
-                     <span>Xin chào, <b><?php echo htmlspecialchars($current_admin['name'] ?? ''); ?></b></span>
-                </div>
-            </header>
-
+            
             <!-- Main Content Area -->
             <main class="admin-content">
                 <?php echo showMessage(); ?>
@@ -329,8 +282,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $product) { // Đảm bảo có s�
                         </div>
 
                         <div class="admin-form-group">
-                            <label for="description">Mô tả chi tiết (*)</label>
-                            <textarea id="description" name="description" rows="10" required><?php echo htmlspecialchars($product['description'] ?? ''); ?></textarea>
+                            <label for="description">Mô tả chi tiết</label>
+                            <textarea name="description" id="description" class="admin-form-control" rows="6"><?php echo htmlspecialchars($product['description'] ?? ''); ?></textarea>
                         </div>
 
                         <div class="admin-form-group">
@@ -383,6 +336,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $product) { // Đảm bảo có s�
                             <label for="new_product_images">Thêm ảnh mới:</label>
                             <input type="file" id="new_product_images" name="new_product_images[]" class="admin-form-control" multiple accept="image/*">
                             <small>Chọn một hoặc nhiều file ảnh mới (JPG, JPEG, PNG, GIF), tối đa 5MB mỗi file.</small>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label for="specs">Thông số kỹ thuật</label>
+                            <textarea name="specs" id="specs" class="admin-form-control" rows="4"><?php echo htmlspecialchars($product['specs'] ?? ''); ?></textarea>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label for="features">Tính năng nổi bật</label>
+                            <textarea name="features" id="features" class="admin-form-control" rows="4"><?php echo htmlspecialchars($product['features'] ?? ''); ?></textarea>
                         </div>
 
                         <div class="admin-form-actions">

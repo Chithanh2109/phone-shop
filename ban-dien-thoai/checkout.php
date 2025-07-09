@@ -10,9 +10,6 @@ if (!isLoggedIn()) {
     exit();
 }
 
-// Lấy thông báo
-$message = showMessage();
-
 // Xử lý POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Xử lý cập nhật số lượng sản phẩm
@@ -187,216 +184,177 @@ $page_title = 'Thanh toán';
 require_once 'includes/header.php';
 ?>
 
-<div style="padding: 20px; max-width: 400px; margin: 20px auto; border: 1px solid #ccc; border-radius: 5px;">
-    <h2>Thông tin thanh toán</h2>
-    
-    <?php echo $message; ?>
+<style>
+@media (min-width: 800px) {
+  .checkout-2col-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 40px;
+    margin: 40px auto 0 auto;
+    max-width: 1000px;
+    padding: 0 16px;
+  }
+  .checkout-2col-form {
+    flex: 1 1 380px;
+    max-width: 440px;
+  }
+  .checkout-2col-summary {
+    flex: 1 1 320px;
+    max-width: 400px;
+  }
+}
+@media (max-width: 799px) {
+  .checkout-2col-wrapper {
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
+  .checkout-2col-form, .checkout-2col-summary {
+    max-width: 100%;
+    margin: 0 auto 0 auto;
+  }
+}
+</style>
 
-    <form id="checkout-form" method="POST" action="checkout.php">
-        <input type="hidden" name="place_order" value="1">
-        
-        <div style="margin-bottom: 15px;">
-            <label for="shipping_name" style="display: block; margin-bottom: 5px;">Họ tên người nhận</label>
-            <input type="text" id="shipping_name" name="shipping_name" 
-                   value="<?php echo htmlspecialchars($user_info['name'] ?? ''); ?>" required style="width: 350px; padding: 8px; box-sizing: border-box;">
+<div class="checkout-2col-wrapper">
+  <div class="checkout-2col-form" style="background:#fff;padding:32px 28px 28px 28px;border-radius:12px;box-shadow:0 2px 16px rgba(0,0,0,0.07);min-width:320px;max-width:100%;width:100%;margin-bottom:32px;">
+    <h2 style="text-align:center;margin-bottom:24px;">Thông tin thanh toán</h2>
+    <form id="checkout-form" method="POST" action="checkout.php" autocomplete="off" style="display:flex;flex-direction:column;gap:18px;">
+      <input type="hidden" name="place_order" value="1">
+      <div>
+        <label for="shipping_name" style="display:block;margin-bottom:6px;font-weight:500;">Họ tên người nhận:</label>
+        <input type="text" id="shipping_name" name="shipping_name" value="<?php echo htmlspecialchars($user_info['name'] ?? ''); ?>" required style="width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:6px;">
+      </div>
+      <div>
+        <label for="shipping_phone" style="display:block;margin-bottom:6px;font-weight:500;">Số điện thoại:</label>
+        <input type="tel" id="shipping_phone" name="shipping_phone" value="<?php echo htmlspecialchars($user_info['phone'] ?? ''); ?>" required style="width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:6px;">
+      </div>
+      <div>
+        <label for="shipping_address" style="display:block;margin-bottom:6px;font-weight:500;">Địa chỉ nhận hàng:</label>
+        <textarea id="shipping_address" name="shipping_address" rows="3" required style="width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:6px;resize:vertical;"><?php echo htmlspecialchars($user_info['address'] ?? ''); ?></textarea>
+      </div>
+      <div>
+        <label style="display:block;margin-bottom:6px;font-weight:500;">Phương thức thanh toán:</label>
+        <div style="display:flex;gap:16px;align-items:center;">
+          <label style="display:flex;align-items:center;gap:6px;font-weight:400;">
+            <input type="radio" name="payment_method" id="payment_cod" value="cod" required> <span>COD</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-weight:400;">
+            <input type="radio" name="payment_method" id="payment_banking" value="banking"> <span>Chuyển khoản</span>
+          </label>
         </div>
-
-        <div style="margin-bottom: 15px;">
-            <label for="shipping_phone" style="display: block; margin-bottom: 5px;">Số điện thoại</label>
-            <input type="tel" id="shipping_phone" name="shipping_phone" 
-                   value="<?php echo htmlspecialchars($user_info['phone'] ?? ''); ?>" required style="width: 350px; padding: 8px; box-sizing: border-box;">
+      </div>
+      <div id="banking-info" style="display:none;background:#f6fafd;border:1px solid #b3e0ff;padding:14px 14px 8px 14px;border-radius:8px;margin-top:-8px;">
+        <h4 style="margin:0 0 8px 0;font-size:1.08rem;color:#007bff;">Thông tin chuyển khoản</h4>
+        <p style="margin:0 0 4px 0;"><strong>Ngân hàng:</strong> MB Bank</p>
+        <p style="margin:0 0 4px 0;"><strong>Chủ tài khoản:</strong> NGUYỄN CHÍ THANH</p>
+        <p style="margin:0 0 4px 0;"><strong>Số tài khoản:</strong> 7789454444427</p>
+        <p style="margin:0 0 8px 0;color:#555;"><i>Nội dung chuyển khoản: Mã đơn hàng của bạn</i></p>
+        <div style="text-align:center;margin-bottom:8px;">
+          <img src="images/products/Qr.png" alt="QR Code" style="width:120px;height:120px;object-fit:contain;">
         </div>
-
-        <div style="margin-bottom: 15px;">
-            <label for="shipping_address" style="display: block; margin-bottom: 5px;">Địa chỉ nhận hàng</label>
-            <textarea id="shipping_address" name="shipping_address" 
-                      rows="3" required style="width: 350px; padding: 8px; box-sizing: border-box;"><?php echo htmlspecialchars($user_info['address'] ?? ''); ?></textarea>
-        </div>
-
-        <div style="margin-bottom: 15px;">
-            <label style="display: block; margin-bottom: 10px;">Phương thức thanh toán</label>
-            <div style="margin-bottom: 5px;">
-                <input type="radio" name="payment_method" 
-                       id="payment_cod" value="cod" required> <label for="payment_cod">Thanh toán khi nhận hàng (COD)</label>
-            </div>
-            <div>
-                <input type="radio" name="payment_method" 
-                       id="payment_banking" value="banking"> <label for="payment_banking">Chuyển khoản ngân hàng</label>
-            </div>
-
-            <!-- Thông tin chuyển khoản -->
-            <div id="banking-info" style="display: none; margin-top: 15px; padding: 15px; background: #f2f2f2; border-radius: 5px; width: 350px; box-sizing: border-box;">
-                <h4>Thông tin chuyển khoản</h4>
-                <p style="margin: 5px 0;"><strong>Ngân hàng:</strong> MB Bank</p>
-                <p style="margin: 5px 0;"><strong>Chủ tài khoản:</strong> NGUYỄN CHÍ THANH</p>
-                <p style="margin: 5px 0;"><strong>Số tài khoản:</strong> 7789454444427</p>
-                <p style="margin: 5px 0; font-size: 0.9em; color: #555;"><i>Nội dung chuyển khoản: Mã đơn hàng của bạn</i></p>
-                <div style="text-align: center; margin-top: 15px;">
-                    <img src="images/products/Qr.png" alt="QR Code" style="max-width: 150px; height: auto;">
-                </div>
-            </div>
-        </div>
-
-        <button type="submit" id="submit-checkout" style="width: 350px; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; font-size: 1em; cursor: pointer;">Đặt hàng</button>
+      </div>
+      <button type="submit" id="submit-checkout" style="padding:12px 0;background:#007bff;color:#fff;border:none;border-radius:6px;font-size:17px;font-weight:600;cursor:pointer;">Đặt hàng</button>
     </form>
-
-    <div style="margin-top: 30px;">
-        <h3>Đơn hàng của bạn</h3>
-        <ul style="list-style: none; padding: 0;">
-            <?php foreach ($cart_items as $item): 
-                $stmt = $conn->prepare("SELECT name, image FROM products WHERE id = ?");
-                $stmt->bind_param("i", $item['id']);
-                $stmt->execute();
-                $result_product = $stmt->get_result();
-                $product = $result_product->fetch_assoc();
-                $stmt->close();
-                
-                // Lấy ảnh sản phẩm
-                $stmt_image = $conn->prepare("SELECT image FROM product_images WHERE product_id = ? ORDER BY sort_order ASC LIMIT 1");
-                $stmt_image->bind_param("i", $item['id']);
-                $stmt_image->execute();
-                $result_image = $stmt_image->get_result();
-                $image = $result_image->fetch_assoc();
-                $stmt_image->close();
-                $image_url = getImageUrl($image ? $image['image'] : ($product['image'] ?? ''));
-            ?>
-            <li style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #eee;">
-                <img src="<?php echo htmlspecialchars($image_url); ?>" 
-                     alt="<?php echo htmlspecialchars($product['name']); ?>" 
-                     style="width: 60px; height: 60px; object-fit: cover; margin-right: 15px;">
-                <div style="flex-grow: 1;">
-                    <h6 style="margin: 0 0 5px 0;"><?php echo htmlspecialchars($product['name']); ?></h6>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <!-- Quantity and Remove Controls -->
-                        <div style="display: flex; align-items: center; gap: 5px;">
-                            <!-- Update Quantity Form -->
-                            <form method="post" action="checkout.php" style="display:inline-flex; align-items:center;">
-                                <input type="hidden" name="update_cart" value="1">
-                                <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
-                                <button type="button" class="quantity-btn minus" style="width: 25px; height: 25px; padding: 0; text-align: center; border: 1px solid #ccc; background-color: #eee; cursor: pointer;">-</button>
-                                <input type="text" name="quantity" value="<?php echo $item['quantity']; ?>" min="1" class="quantity-input" style="width: 40px; text-align: center; padding: 3px; border: 1px solid #ccc;">
-                                <button type="button" class="quantity-btn plus" style="width: 25px; height: 25px; padding: 0; text-align: center; border: 1px solid #ccc; background-color: #eee; cursor: pointer;">+</button>
-                                <!-- Hidden submit button to be triggered by JS -->
-                                <button type="submit" class="update-cart-submit" style="display: none;">Update</button>
-                            </form>
-                            <!-- Remove Item Form -->
-                            <form method="post" action="checkout.php" style="display:inline-block; margin-left: 10px;">
-                                <input type="hidden" name="remove_item" value="1">
-                                <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
-                                <button type="submit" class="btn-remove" data-id="<?php echo $item['id']; ?>" style="background: none; border: none; color: #dc3545; cursor: pointer; padding: 0;">Xóa</button>
-                            </form>
-                        </div>
-                        <span style="font-weight: bold;"><?php echo formatPrice($item['price'] * $item['quantity']); ?></span>
-                    </div>
-                </div>
-            </li>
-            <?php endforeach; ?>
-        </ul>
-
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold;">
-            <span>Tạm tính:</span>
-            <span><?php echo formatPrice($total); ?></span>
+  </div>
+  <div class="checkout-2col-summary checkout-order-summary" style="background:#fff;padding:24px 20px 18px 20px;border-radius:12px;box-shadow:0 2px 16px rgba(0,0,0,0.07);max-width:100%;width:100%;margin:0 auto 32px auto;">
+    <h3 style="margin-bottom:18px;font-size:1.15rem;">Đơn hàng của bạn</h3>
+    <ul style="list-style:none;padding:0;margin:0 0 12px 0;">
+      <?php foreach ($cart_items as $item): 
+        $stmt = $conn->prepare("SELECT name, image FROM products WHERE id = ?");
+        $stmt->bind_param("i", $item['id']);
+        $stmt->execute();
+        $result_product = $stmt->get_result();
+        $product = $result_product->fetch_assoc();
+        $stmt->close();
+        $stmt_image = $conn->prepare("SELECT image FROM product_images WHERE product_id = ? ORDER BY sort_order ASC LIMIT 1");
+        $stmt_image->bind_param("i", $item['id']);
+        $stmt_image->execute();
+        $result_image = $stmt_image->get_result();
+        $image = $result_image->fetch_assoc();
+        $stmt_image->close();
+        $image_url = getImageUrl($image ? $image['image'] : ($product['image'] ?? ''));
+      ?>
+      <li style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <img src="<?php echo htmlspecialchars($image_url); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" style="width:48px;height:48px;object-fit:contain;border-radius:8px;background:#f8f9fa;box-shadow:0 1px 4px rgba(44,62,80,0.04);">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:500;font-size:1rem;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;">
+            <?php echo htmlspecialchars($product['name']); ?>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+            <form method="post" action="checkout.php" style="display:flex;align-items:center;gap:2px;">
+              <input type="hidden" name="update_cart" value="1">
+              <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
+              <input type="hidden" name="quantity" value="<?php echo max(1, $item['quantity'] - 1); ?>">
+              <button type="submit" style="width:24px;height:24px;border:none;background:#eee;border-radius:4px;font-size:16px;font-weight:bold;cursor:pointer;" <?php if ($item['quantity'] <= 1) echo 'disabled'; ?>>-</button>
+            </form>
+            <span style="width:32px;text-align:center;border:1px solid #ccc;border-radius:4px;padding:2px 0;font-size:15px;background:#fff;"><?php echo $item['quantity']; ?></span>
+            <form method="post" action="checkout.php" style="display:flex;align-items:center;gap:2px;">
+              <input type="hidden" name="update_cart" value="1">
+              <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
+              <input type="hidden" name="quantity" value="<?php echo $item['quantity'] + 1; ?>">
+              <button type="submit" style="width:24px;height:24px;border:none;background:#eee;border-radius:4px;font-size:16px;font-weight:bold;cursor:pointer;">+</button>
+            </form>
+            <form method="post" action="checkout.php" style="margin-left:4px;">
+              <input type="hidden" name="remove_item" value="1">
+              <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
+              <button type="submit" style="border:none;background:transparent;color:#e74c3c;font-size:18px;cursor:pointer;" title="Xóa sản phẩm">×</button>
+            </form>
+          </div>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold;">
-            <span>Phí vận chuyển:</span>
-            <span>Miễn phí</span>
+        <div style="font-weight:600;color:#e74c3c;font-size:1.05rem;min-width:60px;text-align:right;">
+          <?php echo formatPrice($item['price'] * $item['quantity']); ?>
         </div>
-        <hr style="margin: 15px 0;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1.2em; font-weight: bold;">
-            <span>Tổng cộng:</span>
-            <span style="color: #007bff;"><?php echo formatPrice($total); ?></span>
-        </div>
+      </li>
+      <?php endforeach; ?>
+    </ul>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:1rem;">
+      <span>Tạm tính:</span>
+      <span><?php echo formatPrice($total); ?></span>
     </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:1rem;">
+      <span>Phí vận chuyển:</span>
+      <span>Miễn phí</span>
+    </div>
+    <hr style="margin:10px 0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:1.08rem;font-weight:600;color:#007bff;">
+      <span>Tổng cộng:</span>
+      <span><?php echo formatPrice($total); ?></span>
+    </div>
+  </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Xử lý hiển thị/ẩn thông tin chuyển khoản
-    const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
-    const bankingInfo = document.getElementById('banking-info');
-
-    paymentMethods.forEach(method => {
-        method.addEventListener('change', function() {
-            if (this.value === 'banking') {
-                bankingInfo.style.display = 'block';
-            } else {
-                bankingInfo.style.display = 'none';
-            }
-        });
+  // Hiện/ẩn thông tin chuyển khoản
+  const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
+  const bankingInfo = document.getElementById('banking-info');
+  paymentMethods.forEach(method => {
+    method.addEventListener('change', function() {
+      if (this.value === 'banking') {
+        bankingInfo.style.display = 'block';
+      } else {
+        bankingInfo.style.display = 'none';
+      }
     });
-
-    // Validate form trước khi submit
-    const checkoutForm = document.getElementById('checkout-form');
-    const submitButton = checkoutForm.querySelector('button[type="submit"]');
-
-    checkoutForm.addEventListener('submit', function(e) {
-        const shippingName = document.getElementById('shipping_name').value;
-        const shippingPhone = document.getElementById('shipping_phone').value;
-        const shippingAddress = document.getElementById('shipping_address').value;
-        const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
-
-        if (!shippingName || !shippingPhone || !shippingAddress || !paymentMethod) {
-            e.preventDefault();
-            alert('Vui lòng điền đầy đủ thông tin và chọn phương thức thanh toán');
-            return;
-        }
-
-        // Vô hiệu hóa nút submit để tránh submit nhiều lần
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
-    });
-
-    // --- Script xử lý số lượng và xóa sản phẩm ---
-    const quantityControls = document.querySelectorAll('.quantity-btn');
-
-    quantityControls.forEach(button => {
-        button.addEventListener('click', function() {
-            const form = this.closest('form');
-            const quantityInput = form.querySelector('.quantity-input');
-            let currentValue = parseInt(quantityInput.value);
-            const productId = form.querySelector('input[name="product_id"]').value;
-
-            if (this.classList.contains('plus')) {
-                quantityInput.value = currentValue + 1;
-            } else if (this.classList.contains('minus')) {
-                if (currentValue > 1) {
-                    quantityInput.value = currentValue - 1;
-                } else if (currentValue === 1) {
-                     // Xử lý xóa sản phẩm khi số lượng về 0 hoặc nhỏ hơn
-                     if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng không?')) {
-                         // Find the remove form associated with this item
-                         const itemContainer = this.closest('li'); // Adjusted selector
-                         const removeForm = itemContainer ? itemContainer.querySelector('form input[name="remove_item"]').closest('form') : null;
-
-                         if (removeForm) {
-                             removeForm.submit(); // Submit the remove form
-                             return; // Stop further processing
-                         }
-                     }
-                     return; // Stop if user cancels deletion or remove form not found
-                }
-            }
-
-            // Submit the update form after changing quantity (only if not deleting)
-            // Check if quantityInput is still valid after potential deletion attempt
-            if (parseInt(quantityInput.value) > 0) {
-                 form.submit();
-            }
-        });
-    });
-
-    // Handle direct input change in quantity field
-    const quantityInputs = document.querySelectorAll('.quantity-input');
-    quantityInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            const form = this.closest('form');
-            let currentValue = parseInt(this.value);
-             if (isNaN(currentValue) || currentValue < 1) {
-                 this.value = 1; // Reset to 1 if invalid
-             }
-            form.submit(); // Submit the form on change
-        });
-    });
+  });
+  // Validate form trước khi submit
+  const checkoutForm = document.getElementById('checkout-form');
+  const submitButton = document.getElementById('submit-checkout');
+  checkoutForm.addEventListener('submit', function(e) {
+    const shippingName = document.getElementById('shipping_name').value;
+    const shippingPhone = document.getElementById('shipping_phone').value;
+    const shippingAddress = document.getElementById('shipping_address').value;
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+    if (!shippingName || !shippingPhone || !shippingAddress || !paymentMethod) {
+      e.preventDefault();
+      alert('Vui lòng điền đầy đủ thông tin và chọn phương thức thanh toán');
+      return;
+    }
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang xử lý...';
+  });
 });
 </script>
 

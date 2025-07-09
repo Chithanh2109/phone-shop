@@ -76,25 +76,19 @@ $stmt->close();
                 <h3>Thông tin đơn hàng</h3>
                 <p>Ngày đặt: <?php echo date('d/m/Y H:i', strtotime($order['created_at'])); ?></p>
                 <p>Trạng thái: 
-                    <span class="status status-<?php echo $order['status']; ?>">
+                    <span class="order-status status-<?php echo htmlspecialchars($order['status']); ?>">
                         <?php
-                        switch ($order['status']) {
-                            case 'pending':
-                                echo 'Chờ xử lý';
-                                break;
-                            case 'processing':
-                                echo 'Đang xử lý';
-                                break;
-                            case 'shipped':
-                                echo 'Đang giao hàng';
-                                break;
-                            case 'delivered':
-                                echo 'Đã giao hàng';
-                                break;
-                            case 'cancelled':
-                                echo 'Đã hủy';
-                                break;
-                        }
+                        $order_status_vietnamese = [
+                            'pending' => 'Chờ xử lý',
+                            'processing' => 'Đang xử lý',
+                            'shipping' => 'Đang vận chuyển',
+                            'shipped' => 'Đã gửi hàng',
+                            'delivered' => 'Đã giao hàng',
+                            'cancelled' => 'Đã hủy',
+                            'returned' => 'Đã trả hàng',
+                            'completed' => 'Hoàn thành',
+                        ];
+                        echo htmlspecialchars($order_status_vietnamese[$order['status']] ?? $order['status']);
                         ?>
                     </span>
                 </p>

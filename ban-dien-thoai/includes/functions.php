@@ -32,7 +32,7 @@ function getCurrentUser() {
 }
 
 function logout() {
-    // Lưu giỏ hàng vào cookie trước khi đăng xuất (kể cả khi rỗng)
+    // Lưu giỏ hàng vào cookie trước khi đăng xuất (ngay cả khi rỗng)
     setcookie('saved_cart', isset($_SESSION['cart']) ? json_encode($_SESSION['cart']) : json_encode([]), time() + 3600*24*7, '/');
     session_destroy();
     redirect('login.php');
@@ -64,7 +64,7 @@ function getImageUrl($image) {
         return $image;
     }
 
-    // Nếu đường dẫn bắt đầu bằng images/
+    // Nếu đường dẫn bắt đầu với images/
     if (strpos($image, 'images/') === 0) {
         return $base_url . $image;
     }
@@ -73,7 +73,7 @@ function getImageUrl($image) {
     return $base_url . 'images/products/' . $image;
 }
 
-// Các hàm liên quan đến Cơ sở dữ liệu
+// Các hàm liên quan đến Database
 function getUserById($id) {
     global $conn;
     $stmt = mysqli_prepare($conn, "SELECT * FROM users WHERE id = ?");
@@ -118,7 +118,7 @@ function showMessage() {
     return '';
 }
 
-// Các hàm điều hướng
+// Các hàm Chuyển hướng
 function redirect($url) {
     header("Location: $url");
     exit();
@@ -138,7 +138,7 @@ function requireLogin() {
     }
 }
 
-// Các hàm bảo mật
+// Các hàm Bảo mật
 function generateCSRFToken() {
     if (!isset($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -150,7 +150,7 @@ function verifyCSRFToken($token) {
     return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
 }
 
-// Các hàm upload file
+// Các hàm Upload file
 function uploadImage($file, $target_dir = 'images/products/') {
     if (!file_exists($target_dir)) {
         mkdir($target_dir, 0777, true);
@@ -279,12 +279,10 @@ function getSetting($key) {
 // ==== Giỏ hàng thuần PHP ====
 function add_to_cart($product_id, $quantity = 1) {
     global $conn;
-    
     // Khởi tạo giỏ hàng nếu chưa có
     if (!isset($_SESSION['cart'])) {
         $_SESSION['cart'] = [];
     }
-
     // Lấy thông tin sản phẩm từ database
     $stmt = mysqli_prepare($conn, "SELECT id, name, price, image FROM products WHERE id = ? AND status = 'active'");
     mysqli_stmt_bind_param($stmt, 'i', $product_id);
@@ -292,29 +290,33 @@ function add_to_cart($product_id, $quantity = 1) {
     $result = mysqli_stmt_get_result($stmt);
     $product = mysqli_fetch_assoc($result);
     mysqli_stmt_close($stmt);
-
     if (!$product) {
         return false; // Sản phẩm không tồn tại hoặc đã bị vô hiệu hóa
     }
-
-    // Kiểm tra xem sản phẩm đã có trong giỏ hàng chưa
-        if (isset($_SESSION['cart'][$product_id])) {
-        // Nếu đã có, cập nhật số lượng
-            $_SESSION['cart'][$product_id]['quantity'] += $quantity;
-        } else {
-        // Nếu chưa có, thêm mới vào giỏ hàng
-            $_SESSION['cart'][$product_id] = [
-                'id' => $product['id'],
-                'name' => $product['name'],
-                'price' => $product['price'],
+    // Nếu đã có và là số (scalar) thì chuyển thành mảng đúng cấu trúc
+    if (isset($_SESSION['cart'][$product_id]) && !is_array($_SESSION['cart'][$product_id])) {
+        $_SESSION['cart'][$product_id] = [
+            'id' => $product['id'],
+            'name' => $product['name'],
+            'price' => $product['price'],
             'image' => $product['image'],
-                'quantity' => $quantity
-            ];
-        }
-
+            'quantity' => (int)$_SESSION['cart'][$product_id] + $quantity
+        ];
+    } elseif (isset($_SESSION['cart'][$product_id])) {
+        // Nếu đã có, cập nhật số lượng
+        $_SESSION['cart'][$product_id]['quantity'] += $quantity;
+    } else {
+        // Nếu chưa có, thêm mới vào giỏ hàng
+        $_SESSION['cart'][$product_id] = [
+            'id' => $product['id'],
+            'name' => $product['name'],
+            'price' => $product['price'],
+            'image' => $product['image'],
+            'quantity' => $quantity
+        ];
+    }
     // Lưu giỏ hàng vào cookie
     setcookie('saved_cart', json_encode($_SESSION['cart']), time() + 3600*24*30, '/'); // Lưu trong 30 ngày
-
     return true;
 }
 
@@ -343,7 +345,15 @@ function get_cart_items() {
     if (!isset($_SESSION['cart']) && isset($_COOKIE['saved_cart'])) {
         $_SESSION['cart'] = json_decode($_COOKIE['saved_cart'], true);
     }
-    return isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
+    $cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
+    // Lọc bỏ các phần tử không phải mảng (tránh lỗi warning)
+    $filtered = [];
+    foreach ($cart as $k => $item) {
+        if (is_array($item) && isset($item['id'], $item['name'], $item['price'], $item['quantity'])) {
+            $filtered[$k] = $item;
+        }
+    }
+    return $filtered;
 }
 
 function get_cart_count() {

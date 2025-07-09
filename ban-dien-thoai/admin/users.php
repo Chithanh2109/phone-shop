@@ -16,11 +16,30 @@ $page_title = 'Quản lý Người dùng';
 // Lấy thông tin admin hiện tại
 $current_admin = getCurrentUser();
 
-// --- Lấy danh sách người dùng --- //
-// Lấy tất cả người dùng trừ admin
-$result_users = $conn->query("SELECT * FROM users WHERE role != 'admin' ORDER BY created_at DESC");
-$users = $result_users->fetch_all(MYSQLI_ASSOC);
-// --- Kết thúc lấy danh sách người dùng --- //
+// Xử lý tìm kiếm theo tên người dùng
+$search_name = isset($_GET['search_name']) ? trim($_GET['search_name']) : '';
+$where = "WHERE role != 'admin'";
+$params = [];
+$types = '';
+if ($search_name !== '') {
+    $where .= " AND name LIKE ? ";
+    $params[] = '%' . $search_name . '%';
+    $types .= 's';
+}
+
+$sql = "SELECT * FROM users $where ORDER BY created_at DESC";
+$stmt = null;
+if (!empty($params)) {
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $result_users = $stmt->get_result();
+    $users = $result_users->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+} else {
+    $result_users = $conn->query($sql);
+    $users = $result_users->fetch_all(MYSQLI_ASSOC);
+}
 
 ?>
 
@@ -31,7 +50,7 @@ $users = $result_users->fetch_all(MYSQLI_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - <?php echo getSetting('site_name'); ?></title>
     <link rel="icon" href="<?php echo getSetting('site_favicon'); ?>" type="image/x-icon">
-    <link rel="stylesheet" href="../css/style.css"> <!-- Tạm dùng CSS chung -->
+    <link rel="stylesheet" href="../assets/css/style.css"> <!-- Tạm dùng CSS chung -->
     <link rel="stylesheet" href="css/admin.css"> <!-- CSS riêng cho admin -->
     <!-- Có thể cần thêm link tới thư viện icon ở đây -->
 </head>
@@ -39,10 +58,9 @@ $users = $result_users->fetch_all(MYSQLI_ASSOC);
     <div class="admin-wrapper">
         <!-- Admin Sidebar -->
         <aside class="admin-sidebar">
-            <h2>Admin Panel</h2>
+            <h2>Quản trị</h2>
             <nav>
                 <ul>
-                    <li><a href="../index.php" class="sidebar-link">Trang chủ</a></li>
                     <?php $current_page = basename($_SERVER['PHP_SELF']); ?>
                     <li><a href="index.php" class="sidebar-link <?php echo ($current_page == 'index.php') ? 'active' : ''; ?>">Bảng điều khiển</a></li>
                     <li><a href="products.php" class="sidebar-link <?php echo ($current_page == 'products.php') ? 'active' : ''; ?>">Quản lý Sản phẩm</a></li>
@@ -66,6 +84,15 @@ $users = $result_users->fetch_all(MYSQLI_ASSOC);
                 <!-- Thêm người dùng mới -->
                 <div class="admin-actions" style="margin-bottom: 20px;">
                     <a href="user_add.php" class="admin-btn admin-btn-primary">Thêm Người dùng mới</a>
+                </div>
+                
+                <!-- Thêm form tìm kiếm vào trước bảng người dùng -->
+                <div class="admin-search-bar" style="margin-bottom: 18px;">
+                    <form method="get" action="users.php" style="display:flex;gap:10px;align-items:center;">
+                        <input type="text" name="search_name" value="<?php echo htmlspecialchars($search_name); ?>" placeholder="Nhập tên người dùng..." class="admin-form-control" style="max-width:220px;">
+                        <button type="submit" class="admin-btn admin-btn-primary">Tìm kiếm</button>
+                        <a href="users.php" class="admin-btn admin-btn-secondary">Xóa lọc</a>
+                    </form>
                 </div>
                 
                 <!-- Nội dung quản lý người dùng sẽ ở đây -->

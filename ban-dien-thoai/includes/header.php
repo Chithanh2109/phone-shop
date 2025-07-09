@@ -1,10 +1,10 @@
 <?php
-// Cấu hình cho tiếng Việt
+// Cấu hình UTF-8 cho tiếng Việt
 mb_internal_encoding('UTF-8');
 mb_http_output('UTF-8');
 mb_regex_encoding('UTF-8');
 
-$base_dir = __DIR__ . '/../'; // Thêm lại định nghĩa biến $base_dir
+$base_dir = __DIR__ . '/../'; // Định nghĩa lại biến $base_dir
 
 require_once $base_dir . 'config/database.php';
 require_once $base_dir . 'includes/functions.php';
@@ -17,13 +17,13 @@ initSession();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo getSetting('site_name'); ?></title>
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="css/style.css">
-    <!-- Có thể cần thêm link tới thư viện icon ở đây (ví dụ: Font Awesome) -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    <!-- Bạn có thể cần thêm liên kết thư viện icon ở đây (ví dụ: Font Awesome) -->
 </head>
 <body>
-    <?php showMessage(); ?>
-    <header>
-        <!-- Thanh top bar (Tùy chọn, dựa trên việc bạn có muốn giữ nó không) -->
+    <?php echo showMessage(); ?>
+    <header class="fixed-header">
+        <!-- Thanh trên cùng (Tùy chọn, giữ lại nếu muốn) -->
         <!--
         <div class="header-top">
             <div class="container">
@@ -49,13 +49,19 @@ initSession();
         </div>
         -->
 
-        <!-- Thanh Header Chính -->
+        <!-- Header chính -->
         <div class="header-main-bar">
             <div class="header-content">
                 <div class="header-icon-link">
                     <a href="index.php">
                         🏠
                         <span>Trang chủ</span>
+                    </a>
+                </div>
+                <div class="header-icon-link">
+                    <a href="products.php">
+                        📱
+                        <span>Sản phẩm</span>
                     </a>
                 </div>
                  <div class="header-icon-link">
@@ -65,7 +71,7 @@ initSession();
                         <span><?php echo getSetting('site_phone'); ?></span>
                     </a>
                 </div>
-                <!-- Thanh tìm kiếm đã chuyển đến đây -->
+                <!-- Thanh tìm kiếm đã được di chuyển đến đây -->
                 <div class="search-bar">
                     <form action="index.php" method="GET">
                         <input type="text" name="search" placeholder="Tìm kiếm sản phẩm..." value="<?php echo htmlspecialchars($search ?? ''); ?>">
@@ -102,9 +108,9 @@ initSession();
                         <div class="dropdown-content">
                             <a href="profile.php">Thông tin tài khoản</a>
                             <a href="orders.php">Đơn hàng của tôi</a>
-                            <?php if (isAdmin()): ?>
+                            <?php /* if (isAdmin()): ?>
                                  <a href="admin/">Trang quản trị</a>
-                            <?php endif; ?>
+                            <?php endif; */ ?>
                             <a href="logout.php">Đăng xuất</a>
                         </div>
                      <?php else: ?>
@@ -120,8 +126,8 @@ initSession();
                 </div>
             </div>
         </div>
-        <!-- Thanh điều hướng (Tùy chọn, cho các liên kết phụ) -->
-        <!-- Giữ lại cấu trúc thanh điều hướng ban đầu đã comment out để tham khảo -->
+        <!-- Thanh điều hướng (Tùy chọn, cho các liên kết bổ sung) -->
+        <!-- Giữ lại cấu trúc thanh điều hướng gốc đã được comment để tham khảo -->
         <!--
         <div class="header-nav">
             <div class="container">

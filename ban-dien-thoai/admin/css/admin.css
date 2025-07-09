@@ -1,39 +1,39 @@
-/* Basic Admin Styles */
-
+/* 1. BỐ CỤC CHUNG ADMIN */ /* Định nghĩa layout tổng thể cho trang quản trị */
 body {
-    background-color: #f4f7f6; /* Light background for admin area */
+    background-color: #f4f7f6;
     margin: 0;
     font-family: Arial, sans-serif;
+    padding: 0 !important;
 }
-
 .admin-wrapper {
     display: flex;
     min-height: 100vh;
 }
 
+/* 2. THANH BÊN (SIDEBAR) QUẢN TRỊ*/
 .admin-sidebar {
-    background: #ff0000;
-    width: 200px;
-    height: 100%;
+    background: #232946;
+    width: 250px;
+    height: 100vh;
     position: fixed;
     left: 0;
     margin: 0;
-    padding: 30px 0 0 0;
+    padding: 32px 0 0 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 16px rgba(44,62,80,0.08);
+    border-radius: 0 18px 18px 0;
     z-index: 1000;
 }
-
 .admin-sidebar h2 {
     text-align: center;
     margin-bottom: 32px;
     color: #fff;
     font-size: 1.3rem;
     letter-spacing: 1px;
+    font-weight: 700;
 }
-
 .admin-sidebar nav ul {
     display: flex;
     flex-direction: column;
@@ -43,18 +43,16 @@ body {
     width: 100%;
     margin: 0;
 }
-
 .admin-sidebar nav ul li {
     margin: 0;
     width: 100%;
 }
-
 .sidebar-link {
-    width: 90%;
-    min-height: 48px;
-    background: #666;
+    width: 95%;
+    min-height: 50px;
+    background: #3e4a5e;
     color: #fff;
-    border-radius: 16px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -62,41 +60,31 @@ body {
     font-weight: 500;
     text-align: center;
     text-decoration: none;
-    transition: background 0.2s, color 0.2s;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
     box-sizing: border-box;
-    padding: 0 8px;
+    padding: 0 10px;
     margin: 0 auto;
     gap: 10px;
+    box-shadow: 0 1px 4px rgba(44,62,80,0.04);
 }
-
-.sidebar-link:hover {
+.sidebar-link:hover, .sidebar-link.active {
     background: #e44d26;
     color: #fff;
-}
-
-/* Mặc định active: cam nhạt */
-.sidebar-link.active {
-    background: #666;
-    color: #fff;
     font-weight: bold;
+    box-shadow: 0 2px 8px rgba(228,77,38,0.10);
 }
-
-/* Bảng điều khiển (thứ 2 trong ul) active: cam đậm */
 .admin-sidebar nav ul li:nth-child(2) .sidebar-link.active {
     background: #ff4d26;
-    color: #fff;
-    font-weight: bold;
 }
 
+/* 3. NỘI DUNG CHÍNH ADMIN  */ /* Style cho phần nội dung chính, header, user menu */
 .admin-main-content {
     flex: 1;
     padding: 0 30px 30px 30px;
     background: #fff;
     min-height: 100vh;
-    padding-top: 0 !important;
-    margin-left: 240px;
+    margin-left: 280px;
 }
-
 .admin-header-top {
     background: #fff;
     padding: 15px 30px 10px 30px;
@@ -105,25 +93,23 @@ body {
     justify-content: space-between;
     align-items: center;
 }
-
 .admin-header-top .user-menu a {
-    color: #333; /* Dark links */
+    color: #333;
     text-decoration: none;
     margin-left: 15px;
 }
 
+/*  4. DASHBOARD & THỐNG KÊ  */ /* Style cho dashboard, thẻ thống kê */
 .admin-dashboard h1 {
      margin-bottom: 20px;
      color: #333;
 }
-
 .admin-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
     margin-bottom: 30px;
 }
-
 .stat-card {
     background: #fff;
     padding: 15px;
@@ -131,57 +117,49 @@ body {
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     text-align: center;
 }
-
 .stat-card h3 {
     font-size: 1.2rem;
     color: #555;
     margin-bottom: 10px;
 }
-
 .stat-card p {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #e44d26; /* Orange color */
+    color: #e44d26;
 }
 
-/* Example Table Style (can be expanded) */
+/*  5. BẢNG DỮ LIỆU QUẢN TRỊ  */ /* Style cho bảng dữ liệu, table admin */
 .admin-table-container {
-    overflow-x: auto; /* Thêm cuộn ngang nếu nội dung bảng quá rộng */
+    overflow-x: auto;
 }
-
 .admin-table {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 20px;
 }
-
-.admin-table th,
-.admin-table td {
+.admin-table th, .admin-table td {
     border: 1px solid #eee;
     padding: 10px;
     text-align: left;
 }
-
 .admin-table th {
     background: #f8f8f8;
 }
-
 .admin-table tbody tr:nth-child(even) {
     background: #fafafa;
 }
-
 .admin-table tbody tr:hover {
     background: #f1f1f1;
 }
 
+/* 6. NÚT, HÀNH ĐỘNG, THÔNG BÁO  */ /* Style cho các loại nút, alert, hành động admin */
 .admin-actions {
     display: flex;
     gap: 6px;
     align-items: center;
     justify-content: center;
 }
-
-.admin-actions a {
+.admin-actions a, .admin-btn {
     display: inline-block;
     margin: 0;
     min-width: 60px;
@@ -191,35 +169,73 @@ body {
     border-radius: 4px;
     line-height: 1.2;
 }
-
-.admin-btn {
-    padding: 5px 12px;
-    font-size: 14px;
-    border-radius: 4px;
-    margin: 0;
+.admin-btn-primary {
+    background-color: #28a745;
+    color: #fff !important;
+    text-decoration: none !important;
 }
-
 .admin-btn-secondary {
     background-color: #007bff;
     color: #fff !important;
     text-decoration: none !important;
 }
-
 .admin-btn-secondary:hover {
     background: #0056b3;
 }
-
 .admin-btn-danger {
     background-color: #dc3545;
     color: #fff !important;
     text-decoration: none !important;
 }
-
 .admin-btn-danger:hover {
     background: #c82333;
 }
+.admin-btn-success {
+    background-color: #007bff !important;
+    color: #fff !important;
+    text-decoration: none !important;
+}
+.admin-btn-success:hover {
+    background: #0056b3 !important;
+}
+.admin-btn-warning {
+    background-color: #ffc107;
+    color: #212529 !important;
+    text-decoration: none !important;
+}
+.admin-btn-warning:hover {
+    background-color: #e0a800;
+}
+.admin-btn-approve {
+    background-color: #007bff !important;
+    color: #fff !important;
+    padding: 10px 15px !important;
+    border: none !important;
+    border-radius: 4px !important;
+    cursor: pointer;
+    text-decoration: none !important;
+    transition: background 0.3s ease;
+}
+.admin-btn-approve:hover {
+    background: #0056b3 !important;
+}
+.admin-alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+.admin-alert-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+.admin-alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
 
-/* Admin Forms */
+/*  7. FORM QUẢN TRỊ */ /* Style cho form, input, label, nhóm form admin */
 .admin-form-container {
     max-width: 600px;
     margin: 20px auto;
@@ -228,104 +244,35 @@ body {
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
-
 .admin-form-container h2 {
     text-align: center;
     margin-bottom: 20px;
     color: #333;
 }
-
 .admin-form-group {
     margin-bottom: 15px;
 }
-
-.admin-form-group label {
+.admin-form-group label, .admin-main-content .form-group label {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
+    color: #000;
 }
-
-.admin-form-control {
+.admin-form-control, input, select, textarea {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-sizing: border-box; /* Include padding and border in element's total width and height */
+    box-sizing: border-box;
+    font-size: 1rem;
+    margin-bottom: 10px;
 }
-
 .admin-form-actions {
     margin-top: 20px;
     text-align: right;
 }
 
-/* Style for labels in form groups in admin main content */
-.admin-main-content .form-group label {
-    color: #000; /* Set label color to black */
-    font-weight: bold; /* Keep bold as it often is for labels */
-}
-
-.admin-btn-primary {
-    background-color: #28a745; /* Màu nền xanh lá cây */
-    color: #fff !important; /* Màu chữ trắng */
-    text-decoration: none !important; /* Loại bỏ gạch chân */
-}
-
-/* Định nghĩa style cho nút Duyệt */
-.admin-btn-success {
-    background-color: #007bff !important; /* Màu nền xanh dương */
-    color: #fff !important; /* Màu chữ trắng */
-    text-decoration: none !important; /* Loại bỏ gạch chân */
-}
-
-.admin-btn-success:hover {
-    background: #0056b3 !important; /* Màu nền xanh dương đậm hơn khi hover */
-}
-
-/* Định nghĩa style cho nút Cảnh báo/Sửa */
-.admin-btn-warning {
-    background-color: #ffc107; /* Màu nền cam */
-    color: #212529 !important; /* Màu chữ đen hoặc xám đậm */
-    text-decoration: none !important;
-}
-
-.admin-btn-warning:hover {
-    background-color: #e0a800; /* Màu nền cam đậm hơn khi hover */
-}
-
-/* Định nghĩa style cho nút Duyệt mới */
-.admin-btn-approve {
-    background-color: #007bff !important; /* Màu nền xanh dương */
-    color: #fff !important; /* Màu chữ trắng */
-    padding: 10px 15px !important; /* Giữ padding giống các nút khác */
-    border: none !important;
-    border-radius: 4px !important;
-    cursor: pointer;
-    text-decoration: none !important; /* Loại bỏ gạch chân */
-    transition: background 0.3s ease;
-}
-
-.admin-btn-approve:hover {
-    background: #0056b3 !important; /* Màu nền xanh dương đậm hơn khi hover */
-}
-
-.admin-alert {
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 4px;
-}
-
-.admin-alert-success {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.admin-alert-danger {
-    background: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-
+/* 8. ẢNH NHỎ SẢN PHẨM */ /* Style cho ảnh thumbnail sản phẩm trong admin */
 .product-thumbnail {
     width: 50px;
     height: 50px;
@@ -334,24 +281,81 @@ body {
     box-shadow: 0 1px 4px rgba(0,0,0,0.07);
 }
 
-/* Responsive adjustments */
+/* 9. RESPONSIVE CHO ADMIN */ /* Style đáp ứng cho màn hình nhỏ, mobile, tablet */
 @media (max-width: 900px) {
-    .admin-sidebar { width: 100vw; }
-    .sidebar-link { width: 90vw; min-width: 120px; }
-    .admin-main-content { padding: 10px; }
-}
-
-input, select, textarea {
-    font-size: 1rem;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    width: 100%;
-    box-sizing: border-box;
+    .admin-sidebar {
+        width: 100vw;
+        height: auto;
+        position: static;
+        flex-direction: row;
+        border-radius: 0 0 18px 18px;
+        padding: 12px 0 8px 0;
+        box-shadow: 0 2px 8px rgba(44,62,80,0.10);
+    }
+    .admin-sidebar nav ul {
+        flex-direction: row;
+        gap: 8px;
+        width: 100%;
+        justify-content: center;
+    }
+    .sidebar-link {
+        min-width: 90px;
+        min-height: 38px;
+        font-size: 0.98rem;
+        border-radius: 10px;
+        padding: 0 6px;
+    }
+    .admin-sidebar h2 {
+        display: none;
+    }
+    .admin-main-content { padding: 10px; margin-left: 0; }
 }
 
 .admin-content {
     margin-top: 0 !important;
     padding-top: 0 !important;
+} 
+
+/* 10. PRODUCT IMAGE PREVIEW */ /* Style cho preview ảnh sản phẩm trong form edit */
+.product-images-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0;
+}
+.product-image-item {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.product-image-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.product-image-item input[type="checkbox"] {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 1;
+}
+.product-image-item label {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.admin-total-products {
+    margin-bottom: 16px;
+    font-weight: 500;
+    color: #29467c;
+    font-size: 1.08rem;
 } 

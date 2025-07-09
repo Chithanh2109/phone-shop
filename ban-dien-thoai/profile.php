@@ -1,5 +1,4 @@
 <?php
-require_once 'includes/header.php';
 require_once 'config/database.php';
 require_once 'includes/functions.php';
 
@@ -20,13 +19,12 @@ $stmt->close();
 
 if (!$user) {
     // Should not happen if isLoggedIn() is true, but for safety
-    echo '<div class="container"><div class="alert alert-danger" style="margin:40px 0;">Không tìm thấy thông tin người dùng.</div></div>';
-    require_once 'includes/footer.php';
+    setMessage('danger', 'Không tìm thấy thông tin người dùng.');
+    redirect('login.php');
     exit;
 }
 
 // Xử lý cập nhật thông tin nếu submit form
-$success = $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = sanitizeInput($_POST['name'] ?? '');
     $email = sanitizeInput($_POST['email'] ?? '');
@@ -69,33 +67,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt_upd->bind_param($types, ...$params);
         
         if ($stmt_upd->execute()) {
-            $success = 'Cập nhật thông tin thành công!';
-            // Reload lại thông tin mới
-            $stmt_reload = $conn->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
-            $stmt_reload->bind_param('i', $user_id);
-            $stmt_reload->execute();
-            $user = $stmt_reload->get_result()->fetch_assoc();
-            $stmt_reload->close();
+            setMessage('success', 'Cập nhật thông tin thành công!');
+            redirect('profile.php');
         } else {
-            $error = 'Có lỗi xảy ra, vui lòng thử lại: ' . $stmt_upd->error;
+            setMessage('danger', 'Có lỗi xảy ra, vui lòng thử lại: ' . $stmt_upd->error);
+            redirect('profile.php');
         }
         $stmt_upd->close();
     } else {
-        $error = implode('<br>', $errors);
+        setMessage('danger', implode('<br>', $errors));
+        redirect('profile.php');
     }
 }
 
 $is_edit = isset($_GET['edit']) || $_SERVER['REQUEST_METHOD'] === 'POST';
+
+require_once 'includes/header.php';
 ?>
 
 <div class="container" style="margin: 40px auto; max-width: 700px;">
     <h2>Thông tin tài khoản của bạn</h2>
     <div style="background:#fff;padding:28px 24px;border-radius:12px;box-shadow:0 2px 16px rgba(0,0,0,0.07);">
-        <?php if (!empty($success)): ?>
-            <div class="alert alert-success"><?php echo $success; ?></div>
-        <?php elseif (!empty($error)): ?>
-            <div class="alert alert-danger"><?php echo $error; ?></div>
-        <?php endif; ?>
         <?php if ($is_edit): ?>
             <form method="post" action="profile.php">
                 <div class="form-group">

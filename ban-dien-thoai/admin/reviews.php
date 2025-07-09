@@ -40,17 +40,16 @@ $reviews = $result->fetch_all(MYSQLI_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - <?php echo getSetting('site_name'); ?></title>
     <link rel="icon" href="<?php echo getSetting('site_favicon'); ?>" type="image/x-icon">
-    <link rel="stylesheet" href="../css/style.css"> <!-- Tạm dùng CSS chung cho các style cơ bản -->
+    <link rel="stylesheet" href="../assets/css/style.css"> <!-- Tạm dùng CSS chung cho các style cơ bản -->
     <link rel="stylesheet" href="css/admin.css"> <!-- CSS riêng cho admin -->
 </head>
 <body>
     <div class="admin-wrapper">
         <!-- Admin Sidebar -->
         <aside class="admin-sidebar">
-            <h2>Admin Panel</h2>
+            <h2>Quản trị</h2>
             <nav>
                 <ul>
-                    <li><a href="../index.php" class="sidebar-link">Trang chủ</a></li>
                     <?php $current_page = basename($_SERVER['PHP_SELF']); ?>
                     <li><a href="index.php" class="sidebar-link <?php echo ($current_page == 'index.php') ? 'active' : ''; ?>">Bảng điều khiển</a></li>
                     <li><a href="products.php" class="sidebar-link <?php echo ($current_page == 'products.php') ? 'active' : ''; ?>">Quản lý Sản phẩm</a></li>
@@ -113,9 +112,6 @@ $reviews = $result->fetch_all(MYSQLI_ASSOC);
             </main>
         </div>
     </div>
-    
-    <!-- Có thể bao gồm một footer riêng cho admin ở đây -->
-    <?php // require_once \'includes/admin_footer.php\'; ?>
     
 </body>
 </html> 

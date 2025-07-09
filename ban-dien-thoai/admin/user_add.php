@@ -15,12 +15,12 @@ $user_status_vietnamese = [
     'banned' => 'Đã cấm'
 ];
 
-// --- Xử lý POST request khi form được submit --- //
+// --- Xử lý khi form được gửi đi (POST request) --- //
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = sanitizeInput($_POST['username']);
     $name = sanitizeInput($_POST['name']);
     $email = sanitizeInput($_POST['email']);
-    $password = $_POST['password']; // Mật khẩu không sanitize HTML, sẽ hash
+    $password = $_POST['password']; // Mật khẩu không cần sanitize HTML, sẽ hash
     $phone = sanitizeInput($_POST['phone'] ?? '');
     $address = sanitizeInput($_POST['address'] ?? '');
     $role = sanitizeInput($_POST['role']);
@@ -28,17 +28,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $errors = [];
 
-    // Basic validation
+    // Kiểm tra dữ liệu bắt buộc
     if (empty($username) || empty($name) || empty($email) || empty($password) || empty($role) || empty($status)) {
         $errors[] = 'Vui lòng điền đầy đủ các trường bắt buộc (Tên đăng nhập, Họ tên, Email, Mật khẩu, Vai trò, Trạng thái).';
     }
 
-    // Validate email format
+    // Kiểm tra định dạng email
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'Địa chỉ email không hợp lệ.';
     }
 
-    // Validate username uniqueness
+    // Kiểm tra tên đăng nhập đã tồn tại
     $stmt_check_username = $conn->prepare("SELECT id FROM users WHERE username = ? LIMIT 1");
     $stmt_check_username->bind_param('s', $username);
     $stmt_check_username->execute();
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $stmt_check_username->close();
 
-    // Validate email uniqueness
+    // Kiểm tra email đã tồn tại
     $stmt_check_email = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
     $stmt_check_email->bind_param('s', $email);
     $stmt_check_email->execute();
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $stmt_check_email->close();
 
-    // Validate role and status
+    // Kiểm tra vai trò và trạng thái hợp lệ
     if (!in_array($role, ['user', 'admin'])) { // Chỉ cho phép gán vai trò user hoặc admin
          $errors[] = 'Vai trò không hợp lệ.';
     }
@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Thêm người dùng mới vào database
         $stmt_insert = $conn->prepare("INSERT INTO users (username, name, email, password, phone, address, role, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-        // Types: s(username), s(name), s(email), s(password), s(phone), s(address), s(role), s(status)
+        // Kiểu dữ liệu: s(username), s(name), s(email), s(password), s(phone), s(address), s(role), s(status)
         $stmt_insert->bind_param('ssssssss', $username, $name, $email, $hashed_password, $phone, $address, $role, $status);
         
         if ($stmt_insert->execute()) {
@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - <?php echo getSetting('site_name'); ?></title>
     <link rel="icon" href="<?php echo getSetting('site_favicon'); ?>" type="image/x-icon">
-    <link rel="stylesheet" href="../css/style.css"> <!-- Tạm dùng CSS chung -->
+    <link rel="stylesheet" href="../assets/css/style.css"> <!-- Tạm dùng CSS chung -->
     <link rel="stylesheet" href="css/admin.css"> <!-- CSS riêng cho admin -->
     <!-- Có thể cần thêm link tới thư viện icon ở đây -->
 </head>
@@ -106,7 +106,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <aside class="admin-sidebar">
             <nav>
                 <ul>
-                    <li><a href="../index.php" class="sidebar-link">Trang chủ</a></li>
                     <?php $current_page = basename($_SERVER['PHP_SELF']); ?>
                     <li><a href="index.php" class="sidebar-link <?php echo ($current_page == 'index.php') ? 'active' : ''; ?>">Bảng điều khiển</a></li>
                     <li><a href="products.php" class="sidebar-link <?php echo ($current_page == 'products.php') ? 'active' : ''; ?>">Quản lý Sản phẩm</a></li>
@@ -122,19 +121,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Admin Main Content -->
         <div class="admin-main-content">
-            <!-- Admin Header Top -->
-            <header class="admin-header-top">
-                <div>
-                    <h3><?php echo $page_title; ?></h3>
-                </div>
-                <div class="user-menu">
-                     <span>Xin chào, <b><?php echo htmlspecialchars($current_admin['name'] ?? ''); ?></b></span>
-                </div>
-            </header>
-
+            
             <!-- Main Content Area -->
             <main class="admin-content">
-                <?php echo showMessage(); ?>
                 <h1><?php echo $page_title; ?></h1>
                 
                 <div class="admin-form-container" style="max-width: 700px;">

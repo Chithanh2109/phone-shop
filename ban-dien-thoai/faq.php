@@ -15,7 +15,7 @@ if ($result) {
     $faqs = $result->fetch_all(MYSQLI_ASSOC);
     $result->free();
 } else {
-    // Optional: Log error if query fails
+    // Tùy chọn: Ghi log lỗi nếu truy vấn thất bại
     // error_log("FAQ fetch error: " . $conn->error);
 }
 

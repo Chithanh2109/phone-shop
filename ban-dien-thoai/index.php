@@ -99,6 +99,28 @@ if ($count_stmt) {
 
 $total_pages = ceil($total_products / $per_page);
 
+$first_item = $offset + 1;
+$last_item = min($offset + $per_page, $total_products);
+
+// Lấy danh sách các hãng điện thoại
+$brands = [];
+$brand_query = "SELECT id, name FROM brands ORDER BY name ASC";
+$brand_result = mysqli_query($conn, $brand_query);
+if ($brand_result) {
+    while ($row = mysqli_fetch_assoc($brand_result)) {
+        $brands[] = $row;
+    }
+}
+// Lấy danh sách các danh mục sản phẩm
+$categories = [];
+$category_query = "SELECT id, name FROM categories ORDER BY name ASC";
+$category_result = mysqli_query($conn, $category_query);
+if ($category_result) {
+    while ($row = mysqli_fetch_assoc($category_result)) {
+        $categories[] = $row;
+    }
+}
+
 $page_title = 'Trang chủ';
 ?>
 
@@ -107,6 +129,29 @@ $page_title = 'Trang chủ';
 
     <main class="index-main">
         <div class="container">
+        <!-- Danh mục sản phẩm -->
+        <div class="category-categories" style="margin-bottom: 24px;">
+            <strong>Danh mục sản phẩm:</strong>
+            <?php foreach ($categories as $category): ?>
+                <a href="products.php?category_id=<?php echo $category['id']; ?>" class="btn btn-outline" style="margin: 4px 4px 4px 0;">
+                    <?php echo htmlspecialchars($category['name']); ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+        <!-- Danh mục các hãng điện thoại -->
+        <div class="brand-categories" style="margin-bottom: 16px;">
+            <strong>Hãng điện thoại:</strong>
+            <?php foreach ($brands as $brand): ?>
+                <a href="products.php?brand_id=<?php echo $brand['id']; ?>" class="btn btn-outline" style="margin: 4px 4px 4px 0;">
+                    <?php echo htmlspecialchars($brand['name']); ?>
+                </a>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- Hiển thị tổng số sản phẩm và số sản phẩm trên mỗi trang -->
+        <p class="total-products-info" style="margin-bottom: 18px; color: #29467c; font-weight: 500; font-size: 1.08rem;">
+            Đang xem <b><?php echo $first_item; ?>–<?php echo $last_item; ?></b> trên tổng <b><?php echo $total_products; ?></b> sản phẩm
+        </p>
 
         <!-- Danh sách sản phẩm -->
         <div class="product-grid">
@@ -157,6 +202,9 @@ $page_title = 'Trang chủ';
                         <div class="product-price">
                             <?php if (!empty($product['sale_price']) && $product['sale_price'] < $product['price']): ?>
                                 <span class="sale-price"><?php echo formatPrice($product['sale_price']); ?></span>
+                                <span class="original-price" style="text-decoration: line-through; color: #888; margin-left: 8px;">
+                                    <?php echo formatPrice($product['price']); ?>
+                                </span>
                             <?php else: ?>
                                 <span class="current-price"><?php echo formatPrice($product['price']); ?></span>
                             <?php endif; ?>
@@ -209,11 +257,6 @@ $page_title = 'Trang chủ';
         <?php endif; ?>
         </div>
     </main>
-
-    <!-- Nút Zalo nổi -->
-    <a href="https://zalo.me/<?php echo preg_replace('/[^0-9]/', '', getSetting('site_phone')); ?>" class="zalo-float" target="_blank" title="Chat Zalo">
-        <img src="images/products/zalo-icon.png" alt="Zalo" class="zalo-float-img">
-    </a>
 
     <?php include 'includes/footer.php'; ?>
 </body>

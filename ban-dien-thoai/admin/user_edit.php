@@ -28,7 +28,7 @@ if ($user_id > 0) {
     redirect('users.php');
 }
 
-// --- Xử lý POST request khi form được submit --- //
+// --- Xử lý khi form được gửi đi (POST request) --- //
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user) {
     $username = sanitizeInput($_POST['username']);
     $name = sanitizeInput($_POST['name']);
@@ -37,21 +37,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user) {
     $address = sanitizeInput($_POST['address'] ?? '');
     $role = sanitizeInput($_POST['role']);
     $status = sanitizeInput($_POST['status']);
-    $password = $_POST['password']; // Mật khẩu không sanitize HTML, sẽ hash
+    $password = $_POST['password']; // Mật khẩu không cần sanitize HTML, sẽ hash
 
     $errors = [];
 
-    // Basic validation
+    // Kiểm tra dữ liệu bắt buộc
     if (empty($username) || empty($name) || empty($email) || empty($role) || empty($status)) {
         $errors[] = 'Vui lòng điền đầy đủ các trường bắt buộc.';
     }
 
-    // Validate email format
+    // Kiểm tra định dạng email
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $errors[] = 'Địa chỉ email không hợp lệ.';
     }
 
-    // Validate username uniqueness (exclude current user)
+    // Kiểm tra tên đăng nhập đã tồn tại (trừ user hiện tại)
     $stmt_check_username = $conn->prepare("SELECT id FROM users WHERE username = ? AND id != ? LIMIT 1");
     $stmt_check_username->bind_param('si', $username, $user_id);
     $stmt_check_username->execute();
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user) {
     }
     $stmt_check_username->close();
 
-    // Validate email uniqueness (exclude current user)
+    // Kiểm tra email đã tồn tại (trừ user hiện tại)
     $stmt_check_email = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ? LIMIT 1");
     $stmt_check_email->bind_param('si', $email, $user_id);
     $stmt_check_email->execute();
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user) {
     }
     $stmt_check_email->close();
 
-    // Validate role and status
+    // Kiểm tra vai trò và trạng thái hợp lệ
     if (!in_array($role, ['user', 'admin'])) { // Chỉ cho phép gán vai trò user hoặc admin
          $errors[] = 'Vai trò không hợp lệ.';
     }
@@ -127,17 +127,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - <?php echo getSetting('site_name'); ?></title>
     <link rel="icon" href="<?php echo getSetting('site_favicon'); ?>" type="image/x-icon">
-    <link rel="stylesheet" href="../css/style.css"> <!-- Tạm dùng CSS chung -->
-    <link rel="stylesheet" href="css/admin.css"> <!-- CSS riêng cho admin -->
-    <!-- Có thể cần thêm link tới thư viện icon ở đây -->
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="css/admin.css"> 
 </head>
 <body>
     <div class="admin-wrapper">
-        <!-- Admin Sidebar -->
         <aside class="admin-sidebar">
+        <h2>Quản trị</h2>
             <nav>
                 <ul>
-                    <li><a href="../index.php" class="sidebar-link">Trang chủ</a></li>
                     <li><a href="index.php" class="sidebar-link <?php echo ($current_page == 'index.php') ? 'active' : ''; ?>">Bảng điều khiển</a></li>
                     <li><a href="products.php" class="sidebar-link <?php echo ($current_page == 'products.php') ? 'active' : ''; ?>">Quản lý Sản phẩm</a></li>
                     <li><a href="orders.php" class="sidebar-link <?php echo ($current_page == 'orders.php') ? 'active' : ''; ?>">Quản lý Đơn hàng</a></li>
@@ -152,19 +150,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user) {
 
         <!-- Admin Main Content -->
         <div class="admin-main-content">
-            <!-- Admin Header Top -->
-            <header class="admin-header-top">
-                <div>
-                    <h3><?php echo $page_title; ?></h3>
-                </div>
-                <div class="user-menu">
-                     <span>Xin chào, <b><?php echo htmlspecialchars($current_admin['name'] ?? ''); ?></b></span>
-                </div>
-            </header>
-
             <!-- Main Content Area -->
             <main class="admin-content">
-                <?php echo showMessage(); ?>
                 <h1><?php echo $page_title; ?>: <?php echo htmlspecialchars($user['name'] ?? ''); ?></h1>
                 
                 <div class="admin-form-container" style="max-width: 700px;">

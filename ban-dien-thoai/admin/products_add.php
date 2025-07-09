@@ -39,6 +39,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = sanitizeInput($_POST['name']);
     $price = filter_var($_POST['price'], FILTER_VALIDATE_INT);
 
+    // Tạo slug từ tên sản phẩm
+    $slug = createSlug($name);
+    if (empty($slug)) {
+        $slug = 'sp-' . uniqid();
+    }
+
     $sale_price = null;
     if (isset($_POST['sale_price']) && $_POST['sale_price'] !== '') {
         $sale_price = filter_var($_POST['sale_price'], FILTER_VALIDATE_INT);
@@ -65,10 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $product_added_successfully = false;
         try {
             // Thêm sản phẩm vào bảng `products`
-            $stmt = $conn->prepare("INSERT INTO products (name, price, sale_price, description, category_id, brand_id, is_active, stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO products (name, slug, price, sale_price, description, category_id, brand_id, is_active, stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             // 's' for string, 'i' for integer. sale_price can be null, so it's a bit tricky. We'll handle it.
-            // Using 'siisiiii' for (string, int, int, string, int, int, int, int)
-            $stmt->bind_param('siisiiii', $name, $price, $sale_price, $description, $category_id, $brand_id, $is_active, $stock);
+            // Using 'ssiisiiii' for (string, string, int, int, string, int, int, int, int)
+            $stmt->bind_param('ssiisiiii', $name, $slug, $price, $sale_price, $description, $category_id, $brand_id, $is_active, $stock);
             
             if (!$stmt->execute()) {
                 throw new Exception("Lỗi khi thêm sản phẩm: " . $stmt->error);
@@ -180,17 +186,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - <?php echo getSetting('site_name'); ?></title>
     <link rel="icon" href="<?php echo getSetting('site_favicon'); ?>" type="image/x-icon">
-    <link rel="stylesheet" href="../css/style.css"> <!-- Tạm dùng CSS chung -->
+    <link rel="stylesheet" href="../assets/css/style.css"> <!-- Tạm dùng CSS chung -->
     <link rel="stylesheet" href="css/admin.css"> <!-- CSS riêng cho admin -->
-    <!-- Có thể cần thêm link tới thư viện icon ở đây -->
 </head>
 <body>
     <div class="admin-wrapper">
         <!-- Admin Sidebar -->
         <aside class="admin-sidebar">
+        <h2>Quản trị</h2>
             <nav>
                 <ul>
-                    <li><a href="../index.php" class="sidebar-link">Trang chủ</a></li>
                     <li><a href="index.php" class="sidebar-link <?php echo ($current_page == 'index.php') ? 'active' : ''; ?>">Bảng điều khiển</a></li>
                     <li><a href="products.php" class="sidebar-link <?php echo ($current_page == 'products.php') ? 'active' : ''; ?>">Quản lý Sản phẩm</a></li>
                     <li><a href="orders.php" class="sidebar-link <?php echo ($current_page == 'orders.php') ? 'active' : ''; ?>">Quản lý Đơn hàng</a></li>
@@ -205,16 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Admin Main Content -->
         <div class="admin-main-content">
-            <!-- Admin Header Top -->
-            <header class="admin-header-top">
-                <div>
-                    <h3><?php echo $page_title; ?></h3>
-                </div>
-                <div class="user-menu">
-                     <span>Xin chào, <b><?php echo htmlspecialchars($current_admin['name'] ?? ''); ?></b></span>
-                </div>
-            </header>
-
+            
             <!-- Main Content Area -->
             <main class="admin-content">
                 <?php echo showMessage(); ?>
@@ -242,8 +238,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
 
                         <div class="admin-form-group">
-                            <label for="description">Mô tả:</label>
-                            <textarea id="description" name="description" class="admin-form-control" rows="6" required><?php echo htmlspecialchars($_POST['description'] ?? ''); // Giữ lại giá trị cũ nếu có lỗi form ?></textarea>
+                            <label for="description">Mô tả chi tiết</label>
+                            <textarea name="description" id="description" class="admin-form-control" rows="6"></textarea>
                         </div>
 
                         <div class="admin-form-group">
@@ -287,6 +283,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label for="product_images">Ảnh sản phẩm:</label>
                             <input type="file" id="product_images" name="product_images[]" class="admin-form-control" multiple accept="image/*">
                             <small>Chọn một hoặc nhiều file ảnh (JPG, JPEG, PNG, GIF), tối đa 5MB mỗi file.</small>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label for="specs">Thông số kỹ thuật</label>
+                            <textarea name="specs" id="specs" class="admin-form-control" rows="4"></textarea>
+                        </div>
+
+                        <div class="admin-form-group">
+                            <label for="features">Tính năng nổi bật</label>
+                            <textarea name="features" id="features" class="admin-form-control" rows="4"></textarea>
                         </div>
 
                         <div class="admin-form-actions">

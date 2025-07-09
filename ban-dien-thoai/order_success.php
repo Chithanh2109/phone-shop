@@ -34,63 +34,51 @@ $page_title = 'Đặt hàng thành công';
 require_once 'includes/header.php';
 ?>
 
-<div class="container py-5">
-    <div class="text-center">
-        <h2 class="text-success mb-3">✅ Đặt hàng thành công!</h2>
-        <p class="lead">Cảm ơn bạn đã đặt hàng của chúng tôi.</p>
-
-        <?php if ($order_info): ?>
-            <p>Mã đơn hàng của bạn: <strong>#<?php echo htmlspecialchars($order_info['id']); ?></strong></p>
-            <p>Tổng tiền: <strong><?php echo formatPrice($order_info['total_price']); ?></strong></p>
-            <p>Thông tin nhận hàng sẽ được gửi đến:</p>
-            <p><strong><?php echo htmlspecialchars($order_info['shipping_name']); ?></strong> - <?php echo htmlspecialchars($order_info['shipping_phone']); ?></p>
-            <p><?php echo htmlspecialchars($order_info['shipping_address']); ?></p>
-
-            <?php if (!empty($order_details)): ?>
-                <h4 class="mt-4">Chi tiết đơn hàng:</h4>
-                <ul class="list-group mx-auto" style="max-width: 600px;">
-                    <?php foreach ($order_details as $detail): 
-                        // Lấy thông tin sản phẩm chi tiết từ database (bao gồm ảnh chính)
-                        $stmt_product = $conn->prepare("SELECT name, image FROM products WHERE id = ? LIMIT 1");
-                        $stmt_product->bind_param("i", $detail['product_id']);
-                        $stmt_product->execute();
-                        $result_product = $stmt_product->get_result();
-                        $product = $result_product->fetch_assoc();
-                        $stmt_product->close();
-                        
-                        // Lấy ảnh đại diện từ bảng product_images (ưu tiên)
-                        $stmt_image = $conn->prepare("SELECT image FROM product_images WHERE product_id = ? ORDER BY sort_order ASC LIMIT 1");
-                        $stmt_image->bind_param("i", $detail['product_id']);
-                        $stmt_image->execute();
-                        $result_image = $stmt_image->get_result();
-                        $main_image_data = $result_image->fetch_assoc();
-                        $stmt_image->close();
-                        
-                        // Sử dụng ảnh từ product_images nếu có, ngược lại sử dụng ảnh chính từ products
-                        $image_to_display = $main_image_data ? $main_image_data['image'] : ($product['image'] ?? '');
-                        $image_url = getImageUrl($image_to_display);
-
-                    ?>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                             <img src="<?php echo htmlspecialchars($image_url); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" style="width: 40px; height: 40px; object-fit: cover; margin-right: 15px;">
-                            <div class="flex-grow-1 text-start">
-                                <?php echo htmlspecialchars($product['name']); ?>
-                                <small class="text-muted d-block">Số lượng: <?php echo $detail['quantity']; ?></small>
-                            </div>
-                            <span class="badge bg-primary rounded-pill"><?php echo formatPrice($detail['price'] * $detail['quantity']); ?></span>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            <?php endif; ?>
-
-        <?php else: ?>
-            <p class="text-danger">Không tìm thấy thông tin đơn hàng hoặc đơn hàng không thuộc về bạn.</p>
-        <?php endif; ?>
-
-        <p class="mt-4">
-            <a href="index.php" class="btn btn-primary">Tiếp tục mua sắm</a>
-        </p>
-    </div>
+<div class="order-success-bg">
+  <div class="order-success-card">
+    <div class="order-success-title">🎉 Đặt hàng thành công!</div>
+    <?php if ($order_info): ?>
+      <div class="order-success-info-row"><b>Mã đơn hàng:</b> <span>#<?php echo htmlspecialchars($order_info['id']); ?></span></div>
+      <div class="order-success-info-row"><b>Ngày đặt:</b> <span><?php echo date('d/m/Y H:i', strtotime($order_info['created_at'])); ?></span></div>
+      <div class="order-success-info-row"><b>Khách hàng:</b> <span><?php echo htmlspecialchars($order_info['shipping_name']); ?></span></div>
+      <div class="order-success-info-row"><b>Điện thoại:</b> <span><?php echo htmlspecialchars($order_info['shipping_phone']); ?></span></div>
+      <div class="order-success-info-row"><b>Địa chỉ:</b> <span><?php echo htmlspecialchars($order_info['shipping_address']); ?></span></div>
+      <div class="order-success-list-title">Sản phẩm đã mua</div>
+      <div class="order-success-product-list">
+        <?php foreach ($order_details as $detail): 
+          $stmt_product = $conn->prepare("SELECT name, image FROM products WHERE id = ? LIMIT 1");
+          $stmt_product->bind_param("i", $detail['product_id']);
+          $stmt_product->execute();
+          $result_product = $stmt_product->get_result();
+          $product = $result_product->fetch_assoc();
+          $stmt_product->close();
+          $stmt_image = $conn->prepare("SELECT image FROM product_images WHERE product_id = ? ORDER BY sort_order ASC LIMIT 1");
+          $stmt_image->bind_param("i", $detail['product_id']);
+          $stmt_image->execute();
+          $result_image = $stmt_image->get_result();
+          $main_image_data = $result_image->fetch_assoc();
+          $stmt_image->close();
+          $image_to_display = $main_image_data ? $main_image_data['image'] : ($product['image'] ?? '');
+          $image_url = getImageUrl($image_to_display);
+        ?>
+        <div class="order-success-product-item">
+          <img src="<?php echo htmlspecialchars($image_url); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="order-success-img">
+          <div class="order-success-prod-info">
+            <div class="order-success-prod-name"><?php echo htmlspecialchars($product['name']); ?></div>
+            <div class="order-success-prod-row"><span>Số lượng:</span> <b><?php echo $detail['quantity']; ?></b></div>
+            <div class="order-success-prod-row"><span>Đơn giá:</span> <b><?php echo formatPrice($detail['price']); ?></b></div>
+            <div class="order-success-prod-row"><span>Thành tiền:</span> <b style="color:#e74c3c;font-weight:600;"><?php echo formatPrice($detail['price'] * $detail['quantity']); ?></b></div>
+          </div>
+        </div>
+        <?php endforeach; ?>
+      </div>
+      <div class="order-success-total-row"><b>Tổng cộng:</b> <span><?php echo formatPrice($order_info['total_price']); ?></span></div>
+      <div class="order-success-thank">Cảm ơn quý khách đã mua hàng!</div>
+    <?php else: ?>
+      <div class="order-success-info-row" style="color:#e74c3c;text-align:center;">Không tìm thấy thông tin đơn hàng hoặc đơn hàng không thuộc về bạn.</div>
+    <?php endif; ?>
+    <a href="index.php" class="order-success-btn">Về trang chủ</a>
+  </div>
 </div>
 
 <?php require_once 'includes/footer.php'; ?> 

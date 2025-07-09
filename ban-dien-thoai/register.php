@@ -1,25 +1,18 @@
 <?php
-// require_once 'includes/header.php'; // Move this line below
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 require_once 'config/database.php';
 require_once 'includes/functions.php';
 
-// Khởi tạo session nếu chưa được khởi tạo trong header.php
-// if (session_status() == PHP_SESSION_NONE) {
-//     session_start();
-// }
-// Hàm initSession() trong functions.php nên xử lý việc này
+initSession();
 
-initSession(); // Đảm bảo session được khởi tạo
-
-// Nếu đã đăng nhập, chuyển hướng về trang chủ
 if (isLoggedIn()) {
     redirect('index.php');
 }
 
-// Biến để hiển thị thông báo
-$message = showMessage();
-
-// Biến để lưu trữ dữ liệu form nếu có lỗi validation, giữ lại thông tin đã nhập
+// Biến thông báo
 $old_input = [
     'name' => '',
     'email' => '',
@@ -28,17 +21,15 @@ $old_input = [
     'username' => '',
 ];
 
-// Xử lý khi form được gửi đi (sử dụng phương thức POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = sanitizeInput($_POST['name'] ?? '');
+    $username = sanitizeInput($_POST['username'] ?? '');
     $email = sanitizeInput($_POST['email'] ?? '');
     $password = sanitizeInput($_POST['password'] ?? '');
     $confirm_password = sanitizeInput($_POST['confirm_password'] ?? '');
     $phone = sanitizeInput($_POST['phone'] ?? '');
     $address = sanitizeInput($_POST['address'] ?? '');
-    $username = sanitizeInput($_POST['username'] ?? '');
-    $name = sanitizeInput($_POST['name'] ?? '');
 
-    // Cập nhật old_input với dữ liệu POST hiện tại để giữ lại giá trị trên form
     $old_input = [
         'name' => $name,
         'email' => $email,
@@ -47,133 +38,101 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'username' => $username,
     ];
 
-    // --- Validation (Kiểm tra hợp lệ dữ liệu) --- //
-    $errors = []; // Mảng lưu trữ các lỗi validation
-
-    // Bỏ validation cho 'name'
-    // if (empty($name)) {
-    //     $errors[] = 'Vui lòng điền Họ và tên.';
-    // }
-    if (empty($email)) {
-        $errors[] = 'Vui lòng điền Email.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Định dạng email không hợp lệ.';
+    $errors = [];
+    // Validation
+    if (empty($name) || strlen($name) < 2) {
+        $errors[] = 'Họ và tên phải có ít nhất 2 ký tự.';
     }
-    if (empty($password)) {
-        $errors[] = 'Vui lòng điền Mật khẩu.';
-    } elseif (strlen($password) < 6) { // Ví dụ: Mật khẩu tối thiểu 6 ký tự
-         $errors[] = 'Mật khẩu phải có ít nhất 6 ký tự.';
+    if (empty($username) || strlen($username) < 3 || !preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+        $errors[] = 'Tên đăng nhập phải có ít nhất 3 ký tự và chỉ chứa chữ, số, gạch dưới.';
     }
-    if (empty($confirm_password)) {
-        $errors[] = 'Vui lòng điền Xác nhận mật khẩu.';
-    } elseif ($password !== $confirm_password) {
+    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = 'Email không hợp lệ.';
+    }
+    if (empty($password) || strlen($password) < 3) {
+        $errors[] = 'Mật khẩu phải có ít nhất 3 ký tự.';
+    }
+    if ($password !== $confirm_password) {
         $errors[] = 'Mật khẩu và xác nhận mật khẩu không khớp.';
     }
-    if (empty($phone)) {
-        $errors[] = 'Vui lòng điền Số điện thoại.';
+    if (empty($phone) || !preg_match('/^[0-9]{10,11}$/', $phone)) {
+        $errors[] = 'Số điện thoại phải có 10-11 chữ số.';
     }
-    if (empty($address)) {
-        $errors[] = 'Vui lòng điền Địa chỉ.';
-    }
-    if (empty($username)) {
-        $errors[] = 'Vui lòng điền Tên đăng nhập.';
+    if (empty($address) || strlen($address) < 5) {
+        $errors[] = 'Địa chỉ phải có ít nhất 5 ký tự.';
     }
 
-    // Nếu không có lỗi validation ban đầu
+    // Kiểm tra trùng email, username
     if (empty($errors)) {
-        // Kiểm tra xem email và username đã tồn tại trong database chưa
-        $stmt_check_email = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
-        $stmt_check_email->bind_param('s', $email);
-        $stmt_check_email->execute();
-        $result_email = $stmt_check_email->get_result();
-        if ($result_email->fetch_assoc()) {
-            $errors[] = 'Email đã tồn tại. Vui lòng sử dụng email khác.';
+        $stmt = $conn->prepare('SELECT id FROM users WHERE email = ? OR username = ? LIMIT 1');
+        $stmt->bind_param('ss', $email, $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            $errors[] = 'Email hoặc tên đăng nhập đã tồn tại.';
         }
-        $stmt_check_email->close();
-
-        $stmt_check_username = $conn->prepare("SELECT id FROM users WHERE username = ? LIMIT 1");
-        $stmt_check_username->bind_param('s', $username);
-        $stmt_check_username->execute();
-        $result_username = $stmt_check_username->get_result();
-        if ($result_username->fetch_assoc()) {
-            $errors[] = 'Tên đăng nhập đã tồn tại. Vui lòng sử dụng tên đăng nhập khác.';
-        }
-        $stmt_check_username->close();
-
-        // Nếu không có lỗi trùng lặp
-        if (empty($errors)) {
-            // Hash mật khẩu trước khi lưu vào database
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-            // Câu lệnh SQL để chèn người dùng mới
-            $sql_insert_user = "INSERT INTO users (username, name, email, password, phone, address, role) VALUES (?, ?, ?, ?, ?, ?, 'user')";
-            $stmt_insert_user = $conn->prepare($sql_insert_user);
-            $stmt_insert_user->bind_param('ssssss', $username, $name, $email, $hashed_password, $phone, $address);
-
-            // Thực thi câu lệnh chèn
-            if ($stmt_insert_user->execute()) {
-                // Đăng ký thành công
-                setMessage('success', 'Đăng ký thành công! Bạn có thể <a href="login.php">Đăng nhập</a> ngay bây giờ.');
-                redirect('register.php');
-            } else {
-                // Xử lý lỗi từ mysqli
-                if ($conn->errno === 1062) { // 1062 là mã lỗi cho duplicate entry
-                    $errors[] = 'Tên đăng nhập hoặc Email đã tồn tại.';
-                } else {
-                    $errors[] = 'Lỗi khi thêm người dùng vào database: ' . $stmt_insert_user->error;
-                }
-            }
-            $stmt_insert_user->close();
-        }
+        $stmt->close();
     }
 
-    // Nếu có lỗi (validation hoặc database), lưu thông báo lỗi vào session
+    // Nếu không có lỗi, thêm user
+    if (empty($errors)) {
+        // Mã hóa mật khẩu bằng md5
+        $hashed_password = md5($password);
+        $stmt = $conn->prepare('INSERT INTO users (username, name, email, password, phone, address, role) VALUES (?, ?, ?, ?, ?, ?, "user")');
+        $stmt->bind_param('ssssss', $username, $name, $email, $hashed_password, $phone, $address);
+        if ($stmt->execute()) {
+            setMessage('success', 'Đăng ký thành công! <a href="login.php">Đăng nhập ngay</a>.');
+            redirect('register.php');
+        } else {
+            $errors[] = 'Lỗi hệ thống, vui lòng thử lại.';
+        }
+        $stmt->close();
+    }
+
     if (!empty($errors)) {
-         // Kết hợp các lỗi thành một danh sách HTML và lưu vào session
-         setMessage('danger', '<ul><li>' . implode('</li><li>', $errors) . '</li></ul>');
-         // Không redirect ở đây để form giữ lại dữ liệu đã nhập
+        setMessage('danger', '<ul><li>' . implode('</li><li>', $errors) . '</li></ul>');
     }
 }
 
-require_once 'includes/header.php'; // Include header after all potential redirects
-
+require_once 'includes/header.php';
 ?>
-
-<div class="auth-container">
-    <h2>Đăng ký tài khoản</h2>
-    <?php echo $message; // Hiển thị thông báo từ session ?>
-    <form action="register.php" method="POST">
-        <div class="form-group">
-            <label for="name">Họ và tên:</label>
-            <input type="text" id="name" name="name" required value="<?php echo htmlspecialchars($old_input['name']); ?>">
-        </div>
-        <div class="form-group">
-            <label for="username">Tên đăng nhập:</label>
-            <input type="text" id="username" name="username" required value="<?php echo htmlspecialchars($old_input['username']); ?>">
-        </div>
-        <div class="form-group">
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required value="<?php echo htmlspecialchars($old_input['email']); ?>">
-        </div>
-        <div class="form-group">
-            <label for="password">Mật khẩu:</label>
-            <input type="password" id="password" name="password" required>
-        </div>
-         <div class="form-group">
-            <label for="confirm_password">Xác nhận mật khẩu:</label>
-            <input type="password" id="confirm_password" name="confirm_password" required>
-        </div>
-        <div class="form-group">
-            <label for="phone">Điện thoại:</label>
-            <input type="text" id="phone" name="phone" required value="<?php echo htmlspecialchars($old_input['phone']); ?>">
-        </div>
-        <div class="form-group">
-            <label for="address">Địa chỉ:</label>
-            <input type="text" id="address" name="address" class="form-control" required value="<?php echo htmlspecialchars($old_input['address']); ?>">
-        </div>
-        <button type="submit" class="btn btn-primary">Đăng ký</button>
+<div style="display:flex;justify-content:center;align-items:center;min-height:70vh;background:#f7f7f7;">
+  <div class="auth-card">
+    <h2 class="auth-title">Đăng ký tài khoản</h2>
+    <form action="register.php" method="POST" autocomplete="off" class="auth-form">
+      <div>
+        <label for="name">Họ và tên:</label>
+        <input type="text" id="name" name="name" required value="<?php echo htmlspecialchars($old_input['name']); ?>">
+      </div>
+      <div>
+        <label for="username">Tên đăng nhập:</label>
+        <input type="text" id="username" name="username" required value="<?php echo htmlspecialchars($old_input['username']); ?>">
+      </div>
+      <div>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required value="<?php echo htmlspecialchars($old_input['email']); ?>">
+      </div>
+      <div>
+        <label for="password">Mật khẩu:</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <div>
+        <label for="confirm_password">Xác nhận mật khẩu:</label>
+        <input type="password" id="confirm_password" name="confirm_password" required>
+      </div>
+      <div>
+        <label for="phone">Điện thoại:</label>
+        <input type="text" id="phone" name="phone" required value="<?php echo htmlspecialchars($old_input['phone']); ?>">
+      </div>
+      <div>
+        <label for="address">Địa chỉ:</label>
+        <input type="text" id="address" name="address" required value="<?php echo htmlspecialchars($old_input['address']); ?>">
+      </div>
+      <button type="submit">Đăng ký</button>
     </form>
-    <p>Đã có tài khoản? <a href="login.php">Đăng nhập ngay</a></p>
+    <div class="auth-extra">
+      <p style="margin-bottom:0;">Đã có tài khoản? <a href="login.php">Đăng nhập ngay</a></p>
+    </div>
+  </div>
 </div>
-
 <?php require_once 'includes/footer.php'; ?> 

@@ -9,14 +9,38 @@ $page_title = 'Quản lý Đơn hàng';
 $current_admin = getCurrentUser();
 
 // Lấy danh sách đơn hàng từ database
-$result = $conn->query("SELECT o.*, u.name as user_name FROM orders o JOIN users u ON o.user_id = u.id ORDER BY o.created_at DESC");
-$orders = $result->fetch_all(MYSQLI_ASSOC);
+$order_id = isset($_GET['order_id']) ? (int)$_GET['order_id'] : 0;
+if ($order_id > 0) {
+  $sql = "SELECT o.*, u.name as user_name FROM orders o JOIN users u ON o.user_id = u.id WHERE o.id = ?";
+  $stmt = $conn->prepare($sql);
+  $stmt->bind_param('i', $order_id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $orders = $result->fetch_all(MYSQLI_ASSOC);
+  $stmt->close();
+  $total_orders = count($orders);
+  $total_pages = 1;
+} else {
+  $result = $conn->query("SELECT o.*, u.name as user_name FROM orders o JOIN users u ON o.user_id = u.id ORDER BY o.created_at DESC");
+  $orders = $result->fetch_all(MYSQLI_ASSOC);
+}
 
-// Mapping trạng thái thanh toán sang tiếng Việt
+// trạng thái thanh toán sang tiếng Việt
 $payment_status_vietnamese = [
     'pending' => 'Đang chờ thanh toán',
     'paid' => 'Đã thanh toán',
     'failed' => 'Thanh toán thất bại'
+];
+
+$order_status_vietnamese = [
+    'pending' => 'Chờ xử lý',
+    'processing' => 'Đang xử lý',
+    'shipping' => 'Đang vận chuyển',
+    'shipped' => 'Đã gửi hàng',
+    'delivered' => 'Đã nhận hàng',
+    'cancelled' => 'Đã hủy',
+    'returned' => 'Đã trả hàng',
+    'completed' => 'Hoàn thành',
 ];
 
 ?>
@@ -28,17 +52,16 @@ $payment_status_vietnamese = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - <?php echo getSetting('site_name'); ?></title>
     <link rel="icon" href="<?php echo getSetting('site_favicon'); ?>" type="image/x-icon">
-    <link rel="stylesheet" href="../css/style.css"> <!-- Tạm dùng CSS chung cho các style cơ bản -->
+    <link rel="stylesheet" href="../assets/css/style.css"> <!-- Tạm dùng CSS chung cho các style cơ bản -->
     <link rel="stylesheet" href="css/admin.css"> <!-- CSS riêng cho admin -->
 </head>
 <body>
     <div class="admin-wrapper">
         <!-- Admin Sidebar -->
         <aside class="admin-sidebar">
-            <h2>Admin Panel</h2>
+            <h2>Quản trị</h2>
             <nav>
                 <ul>
-                    <li><a href="../index.php" class="sidebar-link">Trang chủ</a></li>
                     <?php $current_page = basename($_SERVER['PHP_SELF']); ?>
                     <li><a href="index.php" class="sidebar-link <?php echo ($current_page == 'index.php') ? 'active' : ''; ?>">Bảng điều khiển</a></li>
                     <li><a href="products.php" class="sidebar-link <?php echo ($current_page == 'products.php') ? 'active' : ''; ?>">Quản lý Sản phẩm</a></li>
@@ -60,6 +83,14 @@ $payment_status_vietnamese = [
                 
                 <h1><?php echo $page_title; ?></h1>
                 
+                <div class="admin-search-bar" style="margin-bottom: 18px;">
+                    <form method="get" action="orders.php" style="display:flex;gap:10px;align-items:center;">
+                        <input type="number" name="order_id" min="1" placeholder="Nhập mã đơn hàng..." class="admin-form-control" style="max-width:180px;">
+                        <button type="submit" class="admin-btn admin-btn-primary">Tìm kiếm</button>
+                        <a href="orders.php" class="admin-btn admin-btn-secondary">Xóa lọc</a>
+                    </form>
+                </div>
+                
                 <div class="admin-table-container">
                     <table class="admin-table">
                         <thead>
@@ -80,9 +111,12 @@ $payment_status_vietnamese = [
                                         <td><?php echo htmlspecialchars($order['user_name']); ?></td>
                                         <td><?php echo $order['created_at']; ?></td>
                                         <td data-label="Tổng tiền"><?php echo formatPrice($order['total_price']); ?></td>
-                                        <td data-label="Trạng thái"><?php echo htmlspecialchars($payment_status_vietnamese[$order['payment_status']] ?? $order['payment_status']); ?></td>
+                                        <td data-label="Trạng thái">
+                                            <span class="order-status status-<?php echo htmlspecialchars(trim(strtolower($order['status']))); ?>">
+                                                <?php echo htmlspecialchars($order_status_vietnamese[trim(strtolower($order['status']))] ?? $order['status']); ?>
+                                            </span>
+                                        </td>
                                         <td class="admin-actions">
-                                            <a href="order_detail.php?id=<?php echo $order['id']; ?>">Xem</a>
                                             <a href="order_edit.php?id=<?php echo $order['id']; ?>">Sửa</a>
                                             <a href="order_delete.php?id=<?php echo $order['id']; ?>" onclick="return confirm('Bạn có chắc chắn muốn xóa đơn hàng này không?');">Xóa</a>
                                         </td>
@@ -100,9 +134,6 @@ $payment_status_vietnamese = [
             </main>
         </div>
     </div>
-    
-    <!-- Có thể bao gồm một footer riêng cho admin ở đây -->
-    <?php // require_once \'includes/admin_footer.php\'; ?>
     
 </body>
 </html> 

@@ -70,17 +70,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $faq) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $page_title; ?> - <?php echo getSetting('site_name'); ?></title>
     <link rel="icon" href="<?php echo getSetting('site_favicon'); ?>" type="image/x-icon">
-    <link rel="stylesheet" href="../css/style.css"> <!-- Tạm dùng CSS chung -->
+    <link rel="stylesheet" href="../assets/css/style.css"> <!-- dùng CSS chung -->
     <link rel="stylesheet" href="css/admin.css"> <!-- CSS riêng cho admin -->
 </head>
 <body>
     <div class="admin-wrapper">
         <!-- Admin Sidebar -->
         <aside class="admin-sidebar">
-            <h2>Admin Panel</h2>
+            <h2>Quản trị</h2>
             <nav>
                 <ul>
-                    <li><a href="../index.php" class="sidebar-link">🏠 Trang chủ</a></li>
                     <li><a href="index.php" class="sidebar-link">Bảng điều khiển</a></li>
                     <li><a href="products.php" class="sidebar-link">Quản lý Sản phẩm</a></li>
                     <li><a href="orders.php" class="sidebar-link">Quản lý Đơn hàng</a></li>
@@ -95,19 +94,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $faq) {
 
         <!-- Admin Main Content -->
         <div class="admin-main-content">
-            <!-- Admin Header Top -->
-            <header class="admin-header-top">
-                <div>
-                    <h3><?php echo $page_title; ?></h3>
-                </div>
-                <div class="user-menu">
-                     <span>Xin chào, <b><?php echo htmlspecialchars($current_admin['name'] ?? ''); ?></b></span>
-                </div>
-            </header>
-
+            
             <!-- Main Content Area -->
             <main class="admin-content">
-                <?php echo showMessage(); ?>
                 <?php echo $form_message; // Display form submission messages ?>
                 
                 <h1><?php echo $page_title; ?></h1>
@@ -142,8 +131,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $faq) {
             </main>
         </div>
     </div>
-     
-    <?php // require_once 'includes/admin_footer.php'; ?>
     
 </body>
 </html> 

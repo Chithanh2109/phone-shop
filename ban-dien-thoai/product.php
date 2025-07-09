@@ -7,7 +7,7 @@ require_once 'config/database.php';
 require_once 'includes/functions.php';
 initSession(); // Khởi tạo session ngay từ đầu
 
-// Debug: Check session status and content
+// Debug: Kiểm tra trạng thái session và nội dung
 // echo "Debug: Session Status: " . session_status() . "<br>";
 // echo "Debug: Session Content: <br>";
 // print_r($_SESSION);
@@ -43,7 +43,7 @@ if ($result_qr && $result_qr->num_rows > 0) {
     $qr_image_path = $qr_setting['value'] ?? $qr_image_path;
 }
 
-// Get product reviews
+// Lấy đánh giá sản phẩm
 $reviews = getProductReviews($product['id']);
 $avg_rating = 0;
 if (!empty($reviews)) {
@@ -51,7 +51,7 @@ if (!empty($reviews)) {
     $avg_rating = round($total_rating / count($reviews), 1);
 }
 
-// Get related products (same category or brand)
+// Lấy sản phẩm liên quan (cùng danh mục hoặc thương hiệu)
 $stmt = $conn->prepare("SELECT p.*, b.name as brand_name 
                        FROM products p 
                        LEFT JOIN brands b ON p.brand_id = b.id 
@@ -66,7 +66,7 @@ $result_related = $stmt->get_result();
 $related_products = $result_related->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Handle add to cart
+// Xử lý thêm vào giỏ hàng
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['add_to_cart']) || isset($_POST['buy_now']))) {
     if (!isLoggedIn()) {
         setMessage('error', 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
@@ -100,14 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['add_to_cart']) || is
     }
 }
 
-// Handle review submission
+// Xử lý gửi đánh giá
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
-    // --- DEBUG START ---
-    // echo "Debug: POST Data:<br>";
-    // print_r($_POST);
-    // echo "<br>";
-    // echo "Debug: Received Rating: " . ($_POST['rating'] ?? 'Not Set') . "<br>";
-    // --- DEBUG END ---
 
     if (!isLoggedIn()) {
         setMessage('error', 'Vui lòng đăng nhập để đánh giá sản phẩm');
@@ -122,28 +116,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
     } elseif (empty($comment)) {
         setMessage('error', 'Vui lòng nhập nội dung đánh giá');
     } else {
-        // Check if user has already reviewed this product
-        $stmt_check = $conn->prepare("SELECT id FROM reviews WHERE user_id = ? AND product_id = ?");
-        $stmt_check->bind_param('ii', $_SESSION['user_id'], $product['id']);
-        $stmt_check->execute();
-        $result_check = $stmt_check->get_result();
-        if ($result_check->fetch_assoc()) {
-            setMessage('error', 'Bạn đã đánh giá sản phẩm này rồi');
+        // Thêm đánh giá mới (không kiểm tra đã đánh giá chưa)
+        $stmt_insert = $conn->prepare("INSERT INTO reviews (user_id, product_id, rating, comment, status) VALUES (?, ?, ?, ?, 'pending')");
+        $userId = isLoggedIn() ? $_SESSION['user_id'] : NULL;
+        $stmt_insert->bind_param('iiis', $userId, $product['id'], $rating, $comment);
+        if ($stmt_insert->execute()) {
+            setMessage('success', 'Cảm ơn bạn đã đánh giá sản phẩm');
+            redirect("product.php?id={$product['id']}");
         } else {
-            // Add new review
-            $stmt_insert = $conn->prepare("INSERT INTO reviews (user_id, product_id, rating, comment, status) VALUES (?, ?, ?, ?, 'pending')");
-            // Check if user_id is set before using it (for guest reviews)
-            $userId = isLoggedIn() ? $_SESSION['user_id'] : NULL;
-            $stmt_insert->bind_param('iiis', $userId, $product['id'], $rating, $comment);
-            if ($stmt_insert->execute()) {
-                setMessage('success', 'Cảm ơn bạn đã đánh giá sản phẩm');
-                redirect("product.php?id={$product['id']}");
-            } else {
-                setMessage('error', 'Có lỗi xảy ra, vui lòng thử lại: ' . $stmt_insert->error);
-            }
-            $stmt_insert->close();
+            setMessage('error', 'Có lỗi xảy ra, vui lòng thử lại: ' . $stmt_insert->error);
         }
-        $stmt_check->close();
+        $stmt_insert->close();
     }
 }
 
@@ -155,23 +138,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($product['name']); ?> - Chi tiết sản phẩm</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 <?php include 'includes/header.php'; ?>
 <main class="container product-detail-page">
-    <?php echo showMessage(); // Hiển thị thông báo ?>
     <div class="product-details-section">
         <div class="product-images-gallery">
             <div class="main-product-image-display">
-                <img src="<?php echo htmlspecialchars(getImageUrl($main_image_source)); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" id="mainImage" loading="lazy">
+                <img src="<?php echo htmlspecialchars(getImageUrl($main_image_source)); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" class="main-product-image" loading="lazy">
+            </div>
             </div>
         </div>
 
+    <!-- Thông tin sản phẩm -->
         <div class="product-info-section">
             <h1><?php echo htmlspecialchars($product['name']); ?></h1>
-            <p class="product-brand-category">Thương hiệu: <b><?php echo htmlspecialchars($product['brand']); ?></b> | Danh mục: <b><?php echo htmlspecialchars($product['category']); ?></b></p>
-
+        <?php if (!empty($product['description'])): ?>
+          <div class="product-description">
+            <h2>Chi tiết sản phẩm</h2>
+            <div><?php echo nl2br(htmlspecialchars($product['description'])); ?></div>
+          </div>
+        <?php endif; ?>
+        <div class="product-brand-category">
+            <span>Thương hiệu: <b><?php echo htmlspecialchars($product['brand']); ?></b></span> |
+            <span>Danh mục: <b><?php echo htmlspecialchars($product['category']); ?></b></span>
+        </div>
             <div class="product-rating-display">
                 <div class="stars">
                     <?php for ($i = 1; $i <= 5; $i++): ?>
@@ -180,10 +172,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
                 </div>
                 <span>(<?php echo count($reviews); ?> đánh giá)</span>
             </div>
-
-            <div class="product-details">
-                <h1 class="product-page-name"><?php echo htmlspecialchars($product['name']); ?></h1>
-                
                 <div class="product-page-price">
                     <?php if (!empty($product['sale_price']) && $product['sale_price'] < $product['price']): ?>
                         <span class="sale-price"><?php echo formatPrice($product['sale_price']); ?></span>
@@ -191,21 +179,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
                         <span class="current-price"><?php echo formatPrice($product['price']); ?></span>
                     <?php endif; ?>
                 </div>
-
-                <div class="product-page-stock <?php 
-                    echo ($product['stock'] > 10) ? 'in-stock' : (($product['stock'] > 0) ? 'low-stock' : 'out-of-stock');
-                ?>">
+        <div class="product-page-stock <?php echo ($product['stock'] > 10) ? 'in-stock' : (($product['stock'] > 0) ? 'low-stock' : 'out-of-stock'); ?>">
                     <?php echo $product['stock'] > 0 ? "Còn lại: {$product['stock']} sản phẩm" : "Hết hàng"; ?>
                 </div>
+        <form method="post" class="add-to-cart-form">
+            <div class="quantity-selector">
+                <label for="quantity">Số lượng:</label>
+                <input type="number" id="quantity" name="quantity" value="1" min="1" max="<?php echo $product['stock']; ?>">
             </div>
-
-            <div class="product-description-display">
-                <b>Mô tả:</b>
-                <p>
-                    <?php echo nl2br(htmlspecialchars($product['description'])); ?>
-                </p>
+            <div class="product-action-buttons">
+                <button type="submit" name="add_to_cart" class="btn btn-primary btn-lg">🛒 Thêm vào giỏ</button>
+                <button type="submit" name="buy_now" class="btn btn-secondary btn-lg">⚡ Mua ngay</button>
             </div>
-
+        </form>
             <?php if (!empty($product['specifications'])): ?>
             <div class="product-specifications">
                 <h3>Thông số kỹ thuật</h3>
@@ -226,52 +212,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
                 </div>
             </div>
             <?php endif; ?>
-
+        <?php if (!empty($product['features'])): ?>
             <div class="product-features">
-                <h3>Tính năng nổi bật</h3>
-                <ul class="features-list">
-                    <?php if (!empty($product['features'])): ?>
-                        <?php 
-                        $features = explode("\n", $product['features']);
-                        foreach ($features as $feature): 
-                            if (trim($feature)):
-                        ?>
-                            <li>✅ <?php echo htmlspecialchars(trim($feature)); ?></li>
-                        <?php 
-                            endif;
-                        endforeach; 
-                        ?>
-                    <?php else: ?>
-                        <li>✅ Thiết kế hiện đại, sang trọng</li>
-                        <li>✅ Hiệu năng mạnh mẽ</li>
-                        <li>✅ Camera chất lượng cao</li>
-                        <li>✅ Pin trâu, sạc nhanh</li>
-                    <?php endif; ?>
-                </ul>
+                <h2>Tính năng nổi bật</h2>
+                <div><?php echo nl2br(htmlspecialchars($product['features'])); ?></div>
             </div>
-
-            <div class="product-action-buttons">
-                <form method="post" class="add-to-cart-form">
-                <div class="quantity-selector">
-                        <label for="quantity">Số lượng:</label>
-                        <input type="number" id="quantity" name="quantity" value="1" min="1" max="<?php echo $product['stock']; ?>">
-                </div>
-                    <div class="button-group">
-                        <button type="submit" name="add_to_cart" class="btn btn-primary btn-lg">🛒 Thêm vào giỏ</button>
-                        <button type="submit" name="buy_now" class="btn btn-secondary btn-lg">⚡ Mua ngay</button>
-                    </div>
-                </form>
+        <?php endif; ?>
+        <?php if (!empty($product['specs'])): ?>
+            <div class="product-specs">
+                <h2>Thông số kỹ thuật</h2>
+                <div><?php echo nl2br(htmlspecialchars($product['specs'])); ?></div>
             </div>
-        </div>
+        <?php endif; ?>
+    </div>
+   
+    <div class="product-accessory-suggestion">
+      <h2>Phụ kiện tặng kèm</h2>
+      <ul>
+        <li>Ốp lưng bảo vệ</li>
+        <li>Kính cường lực</li>
+        <li>Sạc nhanh chính hãng</li>
+        <li>Tai nghe Bluetooth</li>
+        <li>Cáp sạc dự phòng</li>
+      </ul>
     </div>
 
-    <!-- Reviews Section -->
+    <!-- Phần đánh giá sản phẩm -->
     <div class="reviews-section-product-page">
         <h2>Đánh giá sản phẩm</h2>
-        <?php 
-         // Allow both logged-in and guest users to submit reviews
-         // if (isLoggedIn()): // Old condition
-         ?>
             <form method="post" class="review-form-product-page">
                 <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
                 <h3>Gửi đánh giá của bạn</h3>
@@ -292,12 +260,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
                 </div>
                 <button type="submit" name="submit_review" class="btn btn-primary">Gửi đánh giá</button>
             </form>
-
         <?php if (empty($reviews)): ?>
             <p>Chưa có đánh giá nào cho sản phẩm này.</p>
         <?php else: ?>
             <h3>Các đánh giá khác (<?php echo count($reviews); ?>)</h3>
-            <!-- Display existing reviews -->
             <div class="existing-reviews">
                 <?php foreach ($reviews as $review): ?>
                     <div class="review-item">
